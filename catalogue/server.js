@@ -155,7 +155,7 @@ function getPromotion(sku) {
 		  if(error) {
 			reject(error);
 		  } else if(response.statusCode != 200) {
-		    console('getPromotion promise response: ' + response.statusCode);
+		    console.log('getPromotion promise response: ' + response.statusCode);
 			reject(error);
 		  } else {
 		    resolve(body);
