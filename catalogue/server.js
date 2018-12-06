@@ -11,6 +11,7 @@ const mongoClient = require('mongodb').MongoClient;
 const mongoObjectID = require('mongodb').ObjectID;
 const bodyParser = require('body-parser');
 const express = require('express');
+const request = require('request');
 
 // MongoDB
 var db;
@@ -56,7 +57,15 @@ app.get('/product/:sku', (req, res) => {
         collection.findOne({sku: req.params.sku}).then((product) => {
             console.log('product', product);
             if(product) {
-                res.json(product);
+            	getPromotion(product.sku).then((resp) => {
+            		console.log('received body' + resp);
+            		console.log('product price' + product.price);
+            		product.price = product.price * 0.9;
+            		console.log('product price reduced' + product.price);
+                	res.json(product);
+            	}).catch((err) => {
+			        res.status(500).send(err);
+			    });
             } else {
                 res.status(404).send('SKU not found');
             }
@@ -135,6 +144,24 @@ function mongoLoop() {
         console.error('ERROR', e);
         setTimeout(mongoLoop, 2000);
     });
+}
+
+function getPromotion(sku) {
+	return new Promise((resolve, reject) => {
+		request({
+		  url: 'http://promotion-svc:8080/search?sku=' + sku,
+		  method: 'POST'
+		}, (error, response, body) => {
+		  if(error) {
+			reject(error);
+		  } else if(response.statusCode != 200) {
+		    console('getPromotion promise response: ' + response.statusCode);
+			reject(error);
+		  } else {
+		    resolve(JSON.parse(body));
+		  }
+		});
+	})
 }
 
 mongoLoop();
