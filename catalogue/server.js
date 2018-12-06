@@ -55,7 +55,7 @@ app.get('/products', (req, res) => {
 app.get('/product/:sku', (req, res) => {
     if(mongoConnected) {
         collection.findOne({sku: req.params.sku}).then((product) => {
-            console.log('product', product);
+            console.log('product: ', JSON.stringify(product));
             if(product) {
             	getPromotion(product.sku).then((resp) => {
             		console.log('received body' + resp);
