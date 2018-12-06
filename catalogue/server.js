@@ -158,7 +158,7 @@ function getPromotion(sku) {
 		    console('getPromotion promise response: ' + response.statusCode);
 			reject(error);
 		  } else {
-		    resolve(JSON.parse(body));
+		    resolve(body);
 		  }
 		});
 	})
