@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discount
+  labels:
+    app: discount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discount
+  template:
+    metadata:
+      labels:
+        app: discount
+    spec:
+      containers:
+      - name: discount
+        image: #image from gcr repo
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 600m
+            memory: 400Mi
+          requests:
+            cpu: 300m
+            memory: 200Mi
