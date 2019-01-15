@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: robot-shop
+  labels:
+    io.kompose.service: load
+  name: load
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: load
+    spec:
+      containers:
+      - image: robotshop/rs-load:latest
+        name: load
+        env:
+          - name: HOST
+            value: "http://web:8080"
+          - name: NUM_CLIENTS
+            value: "10"
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 0.6
+            memory: 600Mi
+          requests:
+            cpu: 400m
+            memory: 300Mi
+      restartPolicy: Always
