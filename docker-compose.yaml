@@ -11,7 +11,9 @@ services:
       restart_policy:
         condition: on-failure
   redis:
-    image: redis:4.0.6
+    build:
+      context: redis
+    image: ${REPO}/redis:${TAG}
     networks:
       - robot-shop
     deploy:
@@ -19,7 +21,9 @@ services:
       restart_policy:
         condition: on-failure
   rabbitmq:
-    image: rabbitmq:3.7-management-alpine
+    build:
+      context: rabbitmq
+    image: ${REPO}/rabbitmq:${TAG}
     networks:
       - robot-shop
     deploy:
