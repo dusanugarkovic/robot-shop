@@ -14,7 +14,7 @@ spec:
         io.kompose.service: load
     spec:
       containers:
-      - image: robotshop/rs-load:latest
+      - image: gcr.io/k8s-brewery/robot-shop/rs-load:latest
         name: load
         env:
           - name: HOST
