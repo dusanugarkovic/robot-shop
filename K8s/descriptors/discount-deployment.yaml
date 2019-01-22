@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: discount
-        image: #image from gcr repo
+        image: gcr.io/k8s-brewery/robot-shop/rs-discount:latest
         ports:
         - containerPort: 8080
         resources:
