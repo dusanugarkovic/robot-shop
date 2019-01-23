@@ -16,7 +16,7 @@ process.on('SIGTERM', terminateAllCalls);
 
 const request = require('request')
 
-const webHost = process.env.WEB_HOST || '35.193.162.239';
+const webHost = process.env.WEB_HOST || 'web';
 const webPort = process.env.WEB_PORT || '8080';
 const protocol = process.env.WEB_PROTOCOL || 'http://';
 const webEndpoint = protocol + webHost + ":" + webPort;
@@ -60,7 +60,7 @@ async function load() {
     ]);
 
     cart = await Promise.resolve(getCart(uuid)).then(JSON.parse);
-    console.log('Cart: ', cart);
+    logger.info('Cart: ', JSON.stringify(cart));
 
     await delay(1000, 2000);
 
@@ -71,19 +71,19 @@ async function load() {
     await delay(1000, 4000);
 
     updatedCart = await Promise.resolve(getCart(uuid)).then(JSON.parse);
-    console.log('Updated Cart: ', updatedCart);
+    logger.info('Updated Cart: ', JSON.stringify(updatedCart));
 
     await delay(1500, 2500);
 
     codes = await Promise.resolve(getCodes()).then(JSON.parse);
     code = getRandomElement(codes);
-    console.log('Code: ', code);
+    logger.info('Code: ', JSON.stringify(code));
 
     await delay(1000, 3000);
 
     cities = await Promise.resolve(getCities(code['code'])).then(JSON.parse);
     city = getRandomElement(cities);
-    console.log('City: ', city);
+    logger.info('City: ', JSON.stringify(city));
 
     await delay(1500, 2000);
 
@@ -93,12 +93,12 @@ async function load() {
     await delay(2000, 5000);
 
     finalCart = await Promise.resolve(confirmShipping(uuid, shipping));
-    console.log('Final Cart: ', finalCart);
+    logger.info('Final Cart: ', JSON.stringify(finalCart));
 
     await delay(1000, 3000);
 
     order = await Promise.resolve(pay(uuid, finalCart));
-    console.log('Order: ', order);
+    logger.info('Order: ', JSON.stringify(order));
 }
 
 async function workWithCart(uuid, products) {
