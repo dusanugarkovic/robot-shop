@@ -58,8 +58,6 @@ app.get('/product/:sku', (req, res) => {
             console.log('product: ', JSON.stringify(product));
             if(product) {
             	getPromotion(product.sku).then((resp) => {
-            		console.log('received body: ' + JSON.stringify(resp));
-            		console.log('product price: ' + product.price);
             		product.price = product.price * (1- resp.discount);
             		console.log('product price reduced: ' + product.price);
                 	res.json(product);
