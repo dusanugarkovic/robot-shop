@@ -9,9 +9,7 @@
   "author": "ivan.savic",
   "license": "Apache-2.0",
   "dependencies": {
-      "express": "^4.15.4",
       "request": "^2.83.0",
-      "body-parser": "^1.18.3",
       "bunyan": "^1.8.12",
       "instana-nodejs-sensor": "latest"
   }

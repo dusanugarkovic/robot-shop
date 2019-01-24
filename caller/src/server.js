@@ -29,7 +29,6 @@ async function main() {
     try {
         await Promise
             .resolve(login())
-            .then(await delay(1000, 2000))
             .then(await load())
             .then(await main());
     } catch (error) {
@@ -40,18 +39,10 @@ async function main() {
 
 async function load() {
     user = await Promise.resolve(getUser()).then(JSON.parse);
-
-    await delay(1000, 2000);
-
     uuid = user['uuid'];
 
     categories = await Promise.resolve(getAllCategories()).then(JSON.parse);
-
-    await delay(1000, 2000);
-
     products = await Promise.resolve(getAllProducts()).then(JSON.parse);
-
-    await delay(0, 2000);
 
     Promise.all([
         await workWithCart(uuid, products),
@@ -62,40 +53,34 @@ async function load() {
     cart = await Promise.resolve(getCart(uuid)).then(JSON.parse);
     logger.info('Cart: ', JSON.stringify(cart));
 
-    await delay(1000, 2000);
+    await delay(0, 1000);
 
     items = cart['items'];
     item = items[Math.floor(Math.random() * items.length)];
     cartPromise = await Promise.resolve(updateCart(uuid, item['sku']));
 
-    await delay(1000, 4000);
+    await delay(0, 1000);
 
     updatedCart = await Promise.resolve(getCart(uuid)).then(JSON.parse);
     logger.info('Updated Cart: ', JSON.stringify(updatedCart));
-
-    await delay(1500, 2500);
 
     codes = await Promise.resolve(getCodes()).then(JSON.parse);
     code = getRandomElement(codes);
     logger.info('Code: ', JSON.stringify(code));
 
-    await delay(1000, 3000);
+    await delay(0, 1000);
 
     cities = await Promise.resolve(getCities(code['code'])).then(JSON.parse);
     city = getRandomElement(cities);
     logger.info('City: ', JSON.stringify(city));
 
-    await delay(1500, 2000);
+    await delay(0, 1000);
 
     shipping = await Promise.resolve(calculateShipping(city['uuid'])).then(JSON.parse);
     shipping['location'] = code['name'] + ' ' + city['name'];
 
-    await delay(2000, 5000);
-
     finalCart = await Promise.resolve(confirmShipping(uuid, shipping));
     logger.info('Final Cart: ', JSON.stringify(finalCart));
-
-    await delay(1000, 3000);
 
     order = await Promise.resolve(pay(uuid, finalCart));
     logger.info('Order: ', JSON.stringify(order));
@@ -113,12 +98,12 @@ async function workWithCart(uuid, products) {
     }
 
     if (getRandomInt(0, 10) <= 3)
-        await Promise.resolve(rate(sku, getRandomInt(1, 5))).then(await delay(1000, 2000));
+        await Promise.resolve(rate(sku, getRandomInt(1, 5))).then(await delay(0, 1000));
 
     Promise.all([
-        await getProduct(sku).then(await delay(0, 2000)),
-        await getRating(sku).then(await delay(0, 2000)),
-        await addToCart(uuid, sku).then(await delay(0, 2000))
+        await getProduct(sku),
+        await getRating(sku),
+        await addToCart(uuid, sku)
     ]);
 }
 
@@ -319,6 +304,5 @@ function terminateAllCalls() {
             }
         }
     });
-
     setTimeout(() => process.exit(0), 2000);
 }
