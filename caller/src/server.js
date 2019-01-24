@@ -21,7 +21,7 @@ const webPort = process.env.WEB_PORT || '8080';
 const protocol = process.env.WEB_PROTOCOL || 'http://';
 const webEndpoint = protocol + webHost + ":" + webPort;
 
-const requestTimeOut = 40000;
+const requestTimeOut = 10000; //ms
 
 main();
 
