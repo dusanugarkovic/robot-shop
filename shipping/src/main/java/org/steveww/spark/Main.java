@@ -228,12 +228,12 @@ public class Main {
             cpds.setJdbcUrl(JDBC_URL);
             cpds.setUser("shipping");
             cpds.setPassword("secret");
-            cpds.setMinPoolSize(5);
+//            cpds.setMinPoolSize(5);
             cpds.setAcquireRetryDelay(1000);
             cpds.setAcquireRetryAttempts(3);
             cpds.setAcquireIncrement(5);
-            cpds.setMaxPoolSize(20);
-            cpds.setMaxStatements(180);
+            cpds.setMaxPoolSize(100);
+            cpds.setMaxStatements(300);
             cpds.setDriverClass("com.mysql.jdbc.Driver");
         } catch (PropertyVetoException e) {
             logger.error("Database Exception", e);
