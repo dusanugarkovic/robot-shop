@@ -1,15 +1,9 @@
 server {
-    listen       8080;
+    listen       6712;
     server_name  localhost;
 
     #charset koi8-r;
     #access_log  /var/log/nginx/host.access.log  main;
-
-    location / {
-        root   /usr/share/nginx/html;
-        index  index.html index.htm;
-        ssi    on;
-    }
 
     #error_page  404              /404.html;
 
@@ -19,29 +13,6 @@ server {
     location = /50x.html {
         root   /usr/share/nginx/html;
     }
-
-    # proxy the PHP scripts to Apache listening on 127.0.0.1:80
-    #
-    #location ~ \.php$ {
-    #    proxy_pass   http://127.0.0.1;
-    #}
-
-    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-    #
-    #location ~ \.php$ {
-    #    root           html;
-    #    fastcgi_pass   127.0.0.1:9000;
-    #    fastcgi_index  index.php;
-    #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
-    #    include        fastcgi_params;
-    #}
-
-    # deny access to .htaccess files, if Apache's document root
-    # concurs with nginx's one
-    #
-    #location ~ /\.ht {
-    #    deny  all;
-    #}
 
     location /api/catalogue/ {
         proxy_pass http://${CATALOGUE_HOST}:8080/;
@@ -64,6 +35,52 @@ server {
     }
 
     location /api/ratings/ {
+        proxy_pass http://${RATINGS_HOST}:80/;
+    }
+    
+    location / {
+        proxy_pass http://${EUM_HOST}:6712/;
+    }
+
+    location /nginx_status {
+        stub_status on;
+        access_log off;
+    }
+}
+
+server {
+    listen       6713;
+    server_name  localhost;
+    
+    location / {
+        proxy_pass http://${FRONTEND_HOST}:3016/;
+    }
+
+    location /nginx_status {
+        stub_status on;
+        access_log off;
+    }
+}
+
+server {
+    listen       6714;
+    server_name  localhost;
+    
+    location / {
+        proxy_pass http://${SHOP_HOST}:8080/;
+    }
+
+    location /nginx_status {
+        stub_status on;
+        access_log off;
+    }
+}
+
+server {
+    listen       6715;
+    server_name  localhost;
+    
+    location / {
         proxy_pass http://${RATINGS_HOST}:80/;
     }
 
