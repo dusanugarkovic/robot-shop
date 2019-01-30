@@ -124,7 +124,11 @@ app.get('/search/:text', (req, res) => {
 function mongoConnect() {
     return new Promise((resolve, reject) => {
     var mongoURL = process.env.MONGO_URL || 'mongodb://mongodb:27017/catalogue';
-    mongoClient.connect(mongoURL, (error, _db) => {
+    mongoClient.connect(mongoURL, {
+        poolSize: 100,
+        maxPoolSize: 100,
+        socketTimeoutMS: 6000
+    }, (error, _db) => {
         if(error) {
             reject(error);
         } else {
