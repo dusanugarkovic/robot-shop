@@ -18,7 +18,7 @@ spec:
         io.kompose.service: payment
     spec:
       containers:
-      - image: robotshop/rs-payment:latest
+      - image: gcr.io/k8s-brewery/robot-shop/rs-payment:latest
         name: payment
         env:
           - name: INSTANA_AGENT_HOST

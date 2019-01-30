@@ -18,7 +18,7 @@ spec:
         io.kompose.service: user
     spec:
       containers:
-      - image: robotshop/rs-user:latest
+      - image: gcr.io/k8s-brewery/robot-shop/rs-user:latest
         name: user
         env:
           - name: INSTANA_AGENT_HOST
