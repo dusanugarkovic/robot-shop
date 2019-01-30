@@ -27,10 +27,10 @@ spec:
         - containerPort: 3306
         resources:
           limits:
+            cpu: 400m
+            memory: 1200Mi
+          requests:
             cpu: 200m
             memory: 800Mi
-          requests:
-            cpu: 100m
-            memory: 400Mi
       restartPolicy: Always
 status: {}
