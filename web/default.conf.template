@@ -81,7 +81,7 @@ server {
     server_name  localhost;
     
     location / {
-        proxy_pass http://${RATINGS_HOST}:80/;
+        proxy_pass http://${RATING_HOST}:3001/;
     }
 
     location /nginx_status {

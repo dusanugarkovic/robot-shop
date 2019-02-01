@@ -13,7 +13,8 @@ ENV CATALOGUE_HOST=catalogue.robot-shop \
     RATINGS_HOST=ratings.robot-shop \
     EUM_HOST=eum-simulator \
     FRONTEND_HOST=eum-frontend \
-    SHOP_HOST=eum-shop
+    SHOP_HOST=eum-shop \
+    RATING_HOST=eum-rating
 
 COPY entrypoint.sh /root/
 ENTRYPOINT ["/root/entrypoint.sh"]
