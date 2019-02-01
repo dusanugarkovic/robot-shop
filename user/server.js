@@ -211,9 +211,13 @@ function mongoConnect() {
     return new Promise((resolve, reject) => {
         var mongoURL = process.env.MONGO_URL || 'mongodb://mongodb:27017/users';
         mongoClient.connect(mongoURL, {
-            poolSize: 100,
-            maxPoolSize: 100,
-            socketTimeoutMS: 6000
+            server: {
+                socketOptions: {
+                    connectTimeoutMS: 3000,
+                    socketTimeoutMS: 6000
+                },
+                poolSize: 100
+            }
         }, (error, _db) => {
             if (error) {
                 reject(error);
