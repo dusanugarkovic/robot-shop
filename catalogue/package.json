@@ -13,6 +13,6 @@
       "express": "^4.15.4",
       "mongodb": "^2.2.33",
       "request": "^2.83.0",
-      "instana-nodejs-sensor": "^1.28.0"
+      "instana-nodejs-sensor": "latest"
   }
 }

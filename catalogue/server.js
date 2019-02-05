@@ -1,7 +1,5 @@
-const instana = require('instana-nodejs-sensor');
-// init tracing
-// MUST be done before loading anything else!
-instana({
+require('instana-nodejs-sensor')({
+    level: 'info',
     tracing: {
         enabled: true
     }

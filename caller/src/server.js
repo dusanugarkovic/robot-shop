@@ -1,7 +1,7 @@
 require('instana-nodejs-sensor')({
     level: 'info',
     tracing: {
-      enabled: false
+      enabled: true
     }
   });
 
