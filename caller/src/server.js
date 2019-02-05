@@ -1,9 +1,9 @@
 require('instana-nodejs-sensor')({
     level: 'info',
     tracing: {
-      enabled: true
+        enabled: true
     }
-  });
+});
 
 const logger = require('bunyan').createLogger({
     name: 'caller',
@@ -15,7 +15,6 @@ const calls = require('./calls');
 const load = require('./load');
 
 const express = require('express');
-require('http').globalAgent.maxSockets = Infinity;
 
 const app = express().use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
@@ -35,8 +34,7 @@ app.get('/', (req, res, next) => {
 async function callCatalogue() {
     calls.getAllCategories();
 
-    const productsResponse = await calls.getAllProducts();
-    const products = productsResponse.data;
+    const products = await calls.getAllProducts();
 
     const product = await getRandomProductWithQuantityInStock(products);
     logger.info(product);
