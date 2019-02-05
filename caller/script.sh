@@ -7,8 +7,8 @@ docker run \
 -e SERVER_PORT='8081' \
 -e WEB_HOST='http://35.193.134.114' \
 -e WEB_PORT='8080' \
--e LOAD_CONCURRENCY=3 \
--e LOAD_REQUESTS_PER_SECOND=1 \
+-e LOAD_CONCURRENCY=8 \
+-e LOAD_REQUESTS_PER_SECOND=5 \
 -p 8081:8081 \
 --name caller \
 --rm caller:latest 

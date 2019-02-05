@@ -7,8 +7,8 @@ module.exports.load = function () {
     const loadOptions = {
         url: serverHost + ':' + serverPort,
         timeout: 10000,
-        concurrency: 8,
-        requestsPerSecond: 5,
+        concurrency: process.env.LOAD_CONCURRENCY || 8,
+        requestsPerSecond: process.env.LOAD_REQUESTS_PER_SECOND || 5,
         agent: 'agentKeepAlive'
     };
 
