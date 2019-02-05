@@ -1,2 +1,2 @@
-sudo npm install -g loadtest
-loadtest http://localhost:8081/ -t 10 -c 5
+# sudo npm install -g loadtest
+loadtest --timeout 100000 -c 1 --rps 0.5 --keepalive http://localhost:8081/
