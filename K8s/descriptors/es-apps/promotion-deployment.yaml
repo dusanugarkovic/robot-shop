@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: es-promotion
+  labels:
+    app: es-promotion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es-promotion
+  template:
+    metadata:
+      labels:
+        app: es-promotion
+    spec:
+      containers:
+      - name: es-promotion
+        image: gcr.io/k8s-brewery/es-apps/promotion:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 200m
+            memory: 400Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
