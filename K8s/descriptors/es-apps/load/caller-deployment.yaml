@@ -21,13 +21,13 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: WEB_HOST
-              vale: "http://catalogue"
+              value: "http://catalogue"
             - name: WEB_PORT
-              vale: "8080"
+              value: "8080"
             - name: LOAD_CONCURRENCY
-              vale: 8
+              value: "8"
             - name: LOAD_REQUESTS_PER_SECOND
-              vale: 5
+              value: "5"
           ports:
             - containerPort: 8080
           resources:

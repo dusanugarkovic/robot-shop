@@ -1,3 +1,10 @@
+require('instana-nodejs-sensor')({
+    level: 'info',
+    tracing: {
+      enabled: false
+    }
+  });
+
 const logger = require('bunyan').createLogger({
     name: 'caller',
     level: 'info'
