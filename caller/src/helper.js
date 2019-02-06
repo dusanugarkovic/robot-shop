@@ -1,8 +1,7 @@
 module.exports = {
     getRandomElement: async function (array) {
-        return array[Math.floor(Math.random() * array.length)]
+        return array[Math.floor(Math.random() * array.length)];
     },
-
     /*
         Returns a random integer between min (inclusive) and max (inclusive)
     */

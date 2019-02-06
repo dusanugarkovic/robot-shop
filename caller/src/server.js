@@ -15,12 +15,16 @@ const calls = require('./calls');
 const load = require('./load');
 
 const express = require('express');
+const bodyParser = require('body-parser');
 
-const app = express().use((req, res, next) => {
+const app = express();
+app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
     res.set('Access-Control-Allow-Origin', '*');
     next();
 });
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.listen(process.env.SERVER_PORT || 8081);
 
