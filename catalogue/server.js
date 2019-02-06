@@ -5,6 +5,11 @@ require('instana-nodejs-sensor')({
     }
 });
 
+const logger = require('bunyan').createLogger({
+    name: 'catalogue',
+    level: 'info'
+});
+
 // const mongoClient = require('mongodb').MongoClient;
 const mongoose = require('mongoose');
 
@@ -42,7 +47,7 @@ app.get('/products', (req, res) => {
         collection.find({}).toArray().then((products) => {
             res.json(products);
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('Error: ', err);
             res.status(500).send(e);
         });
     } else {
@@ -54,11 +59,11 @@ app.get('/products', (req, res) => {
 app.get('/product/:sku', (req, res) => {
     if (mongoConnected) {
         collection.findOne({sku: req.params.sku}).then((product) => {
-            console.log('product: ', JSON.stringify(product));
+            logger.info('product: ', JSON.stringify(product));
             if (product) {
                 getPromotion(product.sku).then((resp) => {
                     product.price = product.price * (1 - resp.discount);
-                    console.log('product price reduced: ' + product.price);
+                    logger.info('product price reduced: ' + product.price);
                     res.json(product);
                 }).catch((err) => {
                     res.status(500).send(err);
@@ -67,7 +72,7 @@ app.get('/product/:sku', (req, res) => {
                 res.status(404).send('SKU not found');
             }
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('Error: ', err);
             res.status(500).send(e);
         });
     } else {
@@ -81,7 +86,7 @@ app.get('/products/:cat', (req, res) => {
         collection.find({categories: req.params.cat}).sort({name: 1}).toArray().then((products) => {
             res.json(products);
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('Error: ', err);
             res.status(500).send(e);
         });
     } else {
@@ -95,7 +100,7 @@ app.get('/categories', (req, res) => {
         collection.distinct('categories').then((categories) => {
             res.json(categories);
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('Error: ', err);
             res.status(500).send(e);
         });
     } else {
@@ -109,7 +114,7 @@ app.get('/search/:text', (req, res) => {
         collection.find({'$text': {'$search': req.params.text}}).toArray().then((hits) => {
             res.json(hits);
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('Error: ', err);
             res.status(500).send(e);
         });
     } else {
@@ -124,8 +129,10 @@ function getPromotion(sku) {
             method: 'POST'
         }, (error, response, body) => {
             if (error) {
+                logger.error('Error: ', err);
                 reject(error);
             } else if (response.statusCode != 200) {
+                logger.error('Error: ', err);
                 reject(error);
             } else {
                 resolve(JSON.parse(body));
@@ -138,11 +145,11 @@ function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/catalogue', {
         useNewUrlParser: true
     }).then(() => {
-        console.log('Connecting to database successful.');
+        logger.info('Connecting to database successful.');
         mongoConnected = true;
         collection = mongoose.connection.collection('products');
     }).catch(err => {
-        console.error('Could not connect to Mongo DB: ', err);
+        logger.error('Could not connect to Mongo DB: ', err);
         mongoConnect();
     });
 }
@@ -150,5 +157,5 @@ function mongoConnect() {
 // fire it up!
 const port = process.env.CATALOGUE_SERVER_PORT || '8080';
 app.listen(port, () => {
-    console.log('Started on port', port);
+    logger.info('Started on port', port);
 });

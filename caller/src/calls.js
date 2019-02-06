@@ -1,10 +1,3 @@
-require('instana-nodejs-sensor')({
-    level: 'info',
-    tracing: {
-        enabled: true
-    }
-});
-
 const request = require('request');
 
 const webHost = process.env.WEB_HOST || 'http://35.193.134.114';
