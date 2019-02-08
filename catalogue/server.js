@@ -57,9 +57,7 @@ app.get('/product/:sku', (req, res) => {
         collection.findOne({sku: req.params.sku}).then((product) => {
             console.log('product: ', JSON.stringify(product));
             if(product) {
-            	getPromotion(product.sku).then((resp) => {
-            		console.log('received body: ' + JSON.stringify(resp));
-            		console.log('product price: ' + product.price);
+            	getDiscount(product.sku).then((resp) => {
             		product.price = product.price * (1- resp.discount);
             		console.log('product price reduced: ' + product.price);
                 	res.json(product);
@@ -154,11 +152,11 @@ function mongoLoop() {
     });
 }
 
-function getPromotion(sku) {
+function getDiscount(sku) {
 	return new Promise((resolve, reject) => {
 		request({
-		  url: 'http://promotion-svc:8080/search?sku=' + sku,
-		  method: 'POST'
+		  url: 'http://discount-svc:8080/find/' + sku,
+		  method: 'GET'
 		}, (error, response, body) => {
 		  if(error) {
 			reject(error);
