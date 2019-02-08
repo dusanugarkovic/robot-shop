@@ -1,5 +1,5 @@
-require('instana-nodejs-sensor')({
-    level: 'info',
+const instana = require('instana-nodejs-sensor');
+instana({
     tracing: {
         enabled: true
     }
@@ -20,7 +20,7 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Headers', 'X-INSTANA-T, X-INSTANA-S, X-INSTANA-L');
     next();
 });
 

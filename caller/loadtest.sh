@@ -1,2 +1,2 @@
 # sudo npm install -g loadtest
-loadtest http://localhost:8081/ -t 5 -c 1
+loadtest http://35.222.204.155:8080/ -c 8 --rps 5 --timeout 10000

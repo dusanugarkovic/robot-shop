@@ -1,5 +1,5 @@
-require('instana-nodejs-sensor')({
-    level: 'info',
+const instana = require('instana-nodejs-sensor');
+instana({
     tracing: {
         enabled: true
     }
@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 
 const bodyParser = require('body-parser');
 const express = require('express');
-const request = require('request');
+const request = require('request-promise-native');
 
 // MongoDB
 var collection;
@@ -45,6 +45,7 @@ app.get('/health', (req, res) => {
 app.get('/products', (req, res) => {
     if (mongoConnected) {
         collection.find({}).toArray().then((products) => {
+            getPromotion(products[0].sku);
             res.json(products);
         }).catch((e) => {
             logger.error('Error: ', err);
