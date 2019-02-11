@@ -1,12 +1,18 @@
 <?php
 require_once 'API.class.php';
 
+use Monolog\Logger;
+
 class RatingsAPI extends API {
     public function __construct($request, $origin) {
         parent::__construct($request);
+        // Logging
+        $this->logger = new Logger('RatingsAPI');
+        $this->logger->pushHandler($this->logHandler);
     }
 
     protected function health() {
+        $this->logger->info('health OK');
         return 'OK';
     }
 
@@ -23,9 +29,13 @@ class RatingsAPI extends API {
     protected function fetch() {
         if($this->method == 'GET' && isset($this->verb) && count($this->args) == 0) {
             $sku = $this->verb;
+            if(! $this->_checkSku($sku)) {
+                throw new Exception("$sku not found", 404);
+            }
             $data = $this->_getRating($sku);
             return $data;
         } else {
+            $this->logger->warn('fetch rating - bad request');
             throw new Exception('Bad request', 400);
         }
     }
@@ -51,6 +61,7 @@ class RatingsAPI extends API {
                 $this->_updateRating($sku, $newAvg, $rating['rating_count'] + 1);
             }
         } else {
+            $this->logger->warn('set rating - bad request');
             throw new Exception('Bad request', 400);
         }
 
@@ -72,9 +83,11 @@ class RatingsAPI extends API {
                     return array('avg_rating' => 0, 'rating_count' => 0);
                 }
             } else {
+                $this->logger->error('failed to query data');
                 throw new Exception('Failed to query data', 500);
             }
         } else {
+            $this->logger->error('database connection error');
             throw new Exception('Database connection error', 500);
         }
     }
@@ -84,9 +97,11 @@ class RatingsAPI extends API {
         if($db) {
             $stmt = $db->prepare('update ratings set avg_rating = ?, rating_count = ? where sku = ?');
             if(! $stmt->execute(array($score, $count, $sku))) {
+                $this->logger->error('failed to update rating');
                 throw new Exception('Failed to update data', 500);
             }
         } else {
+            $this->logger->error('database connection error');
             throw new Exception('Database connection error', 500);
         }
     }
@@ -96,9 +111,11 @@ class RatingsAPI extends API {
         if($db) {
             $stmt = $db->prepare('insert into ratings(sku, avg_rating, rating_count) values(?, ?, ?)');
             if(! $stmt->execute(array($sku, $score, 1))) {
+                $this->logger->error('failed to insert data');
                 throw new Exception('Failed to insert data', 500);
             }
         } else {
+            $this->logger->error('database connection error');
             throw new Exception('Database connection error', 500);
         }
     }
@@ -116,7 +133,7 @@ class RatingsAPI extends API {
             $db = new PDO($dsn, 'ratings', 'iloveit', $opt);
         } catch (PDOException $e) {
             $msg = $e->getMessage();
-            error_log("Database error $msg");
+            $this->logger->error("Database error $msg");
             $db = false;
         }
 
@@ -136,10 +153,11 @@ class RatingsAPI extends API {
 
         $data = curl_exec($curl);
         if(! $data) {
+            $this->logger->error('failed to connect to catalogue');
             throw new Exception('Failed to connect to catalogue', 500);
         }
         $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-        error_log("catalogue status $status");
+        $this->logger->info("catalogue status $status");
 
         curl_close($curl);
 
