@@ -6,9 +6,9 @@ const serverPort = process.env.SERVER_PORT || 8081;
 module.exports.load = function () {
     const loadOptions = {
         url: serverHost + ':' + serverPort,
-        timeout: 20000,
-        concurrency: 3,
-        requestsPerSecond: 0.5,
+        timeout: 10000,
+        concurrency: process.env.LOAD_CONCURRENCY || 8,
+        requestsPerSecond: process.env.LOAD_REQUESTS_PER_SECOND || 5,
         agent: 'agentKeepAlive'
     };
 

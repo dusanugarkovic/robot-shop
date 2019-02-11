@@ -1,34 +1,35 @@
 const instana = require('instana-nodejs-sensor');
-// init tracing
-// MUST be done before loading anything else!
 instana({
     tracing: {
         enabled: true
     }
 });
 
-const mongoClient = require('mongodb').MongoClient;
-const mongoObjectID = require('mongodb').ObjectID;
+const logger = require('bunyan').createLogger({
+    name: 'catalogue',
+    level: 'info'
+});
+
+const mongoose = require('mongoose');
+
 const redis = require('redis');
 const bodyParser = require('body-parser');
 const express = require('express');
 
-// MongoDB
-var db;
 var usersCollection;
 var ordersCollection;
 var mongoConnected = false;
 
 const app = express();
-
 app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
     res.set('Access-Control-Allow-Origin', '*');
     next();
 });
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+
+mongoConnect();
 
 app.get('/health', (req, res) => {
     var stat = {
@@ -41,14 +42,14 @@ app.get('/health', (req, res) => {
 // use REDIS INCR to track anonymous users
 app.get('/uniqueid', (req, res) => {
     // get number from Redis
-    redisClient.incr('anonymous-counter', (err, r) => {
-        if (!err) {
+    redisClient.incr('anonymous-counter', (e, r) => {
+        if (!e) {
             res.json({
                 uuid: 'anonymous-' + r
             });
         } else {
-            console.log('ERROR', err);
-            res.status(500).send(err);
+            logger.error('ERROR', e);
+            res.status(500).send(e);
         }
     });
 });
@@ -59,7 +60,7 @@ app.get('/users', (req, res) => {
         usersCollection.find().toArray().then((users) => {
             res.json(users);
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
@@ -68,14 +69,14 @@ app.get('/users', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    console.log('login', req.body);
+    logger.info('login', req.body);
     if (req.body.name === undefined || req.body.password === undefined) {
         res.status(400).send('name or passowrd not supplied');
     } else if (mongoConnected) {
         usersCollection.findOne({
             name: req.body.name,
         }).then((user) => {
-            console.log('user', user);
+            logger.info('user', user);
             if (user) {
                 if (user.password == req.body.password) {
                     res.json(user);
@@ -86,7 +87,7 @@ app.post('/login', (req, res) => {
                 res.status(404).send('name not found');
             }
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
@@ -96,7 +97,7 @@ app.post('/login', (req, res) => {
 
 // TODO - validate email address format
 app.post('/register', (req, res) => {
-    console.log('register', req.body);
+    logger.info('register', req.body);
     if (req.body.name === undefined || req.body.password === undefined || req.body.email === undefined) {
         res.status(400).send('insufficient data');
     } else if (mongoConnected) {
@@ -111,15 +112,15 @@ app.post('/register', (req, res) => {
                     password: req.body.password,
                     email: req.body.email
                 }).then((r) => {
-                    console.log('inserted', r.result);
+                    logger.info('inserted', r.result);
                     res.send('OK');
                 }).catch((e) => {
-                    console.log('ERROR', e);
+                    logger.error('ERROR', e);
                     res.status(500).send(e);
                 });
             }
         }).catch((e) => {
-            console.log('ERROR', e);
+            logger.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
@@ -128,7 +129,7 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/order/:id', (req, res) => {
-    console.log('order', req.body);
+    logger.info('order', req.body);
     // only for registered users
     if (mongoConnected) {
         usersCollection.findOne({
@@ -206,42 +207,19 @@ redisClient.on('ready', (r) => {
     console.log('Redis READY', r);
 });
 
-// set up Mongo
 function mongoConnect() {
-    return new Promise((resolve, reject) => {
-        var mongoURL = process.env.MONGO_URL || 'mongodb://mongodb:27017/users';
-        mongoClient.connect(mongoURL, {
-            server: {
-                socketOptions: {
-                    connectTimeoutMS: 3000,
-                    socketTimeoutMS: 6000
-                },
-                poolSize: 100
-            }
-        }, (error, _db) => {
-            if (error) {
-                reject(error);
-            } else {
-                db = _db;
-                usersCollection = db.collection('users');
-                ordersCollection = db.collection('orders');
-                resolve('connected');
-            }
-        });
-    });
-}
-
-function mongoLoop() {
-    mongoConnect().then((r) => {
+    mongoose.connect('mongodb://mongodb:27017/users', {
+        useNewUrlParser: true
+    }).then(() => {
+        logger.info('Connecting to database successful.');
         mongoConnected = true;
-        console.log('MongoDB connected');
-    }).catch((e) => {
-        console.error('ERROR', e);
-        setTimeout(mongoLoop, 2000);
+        usersCollection = mongoose.connection.collection('users');
+        ordersCollection = mongoose.connection.collection('orders');
+    }).catch(err => {
+        logger.error('Could not connect to Mongo DB: ', err);
+        mongoConnect();
     });
 }
-
-mongoLoop();
 
 // fire it up!
 const port = process.env.USER_SERVER_PORT || '8080';

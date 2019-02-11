@@ -9,10 +9,11 @@
   "author": "SteveW",
   "license": "Apache-2.0",
   "dependencies": {
-      "body-parser": "^1.18.1",
-      "express": "^4.15.4",
-      "mongodb": "^2.2.33",
-      "redis": "^2.8.0",
-      "instana-nodejs-sensor": "^1.28.0"
+    "instana-nodejs-sensor": "^1.28.0",
+    "bunyan": "^1.8.12",
+    "body-parser": "^1.18.1",
+    "express": "^4.15.4",
+    "mongoose": "^5.4.10",
+    "redis": "^2.8.0"
   }
 }
