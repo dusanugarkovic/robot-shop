@@ -21,7 +21,7 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: WEB_HOST
-              value: "http://catalogue"git s
+              value: "http://catalogue"
             - name: WEB_PORT
               value: "8080"
             - name: LOAD_CONCURRENCY
