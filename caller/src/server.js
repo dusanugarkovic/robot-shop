@@ -20,7 +20,7 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Headers', 'X-INSTANA-T, X-INSTANA-S, X-INSTANA-L');
+    res.set('Access-Control-Allow-Headers', '*');
     next();
 });
 
@@ -31,18 +31,20 @@ app.listen(process.env.SERVER_PORT || 8081);
 
 load.load();
 
-app.get('/', (req, res, next) => {
-    callCatalogue();
-    res.send("OK");
+app.get('/', async (req, res, next) => {
+    const result = await callCatalogue();
+    logger.info(result)
+
+    res.json(result);
 });
 
 async function callCatalogue() {
-    calls.getAllCategories();
+    const categories = await calls.getAllCategories();
 
     const products = await calls.getAllProducts();
-
     const product = await getRandomProductWithQuantityInStock(products);
-    logger.info(product);
+
+    return product;
 }
 
 async function getRandomProductWithQuantityInStock(products) {

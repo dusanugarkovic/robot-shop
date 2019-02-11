@@ -20,9 +20,9 @@ spec:
               value: "http://caller"
             - name: SERVER_PORT
               value: "8080"
-            - name: WEB_HOST
+            - name: WEB_HOST_CATALOGUE
               value: "http://catalogue"
-            - name: WEB_PORT
+            - name: WEB_PORT_CATALOGUE
               value: "8080"
             - name: LOAD_CONCURRENCY
               value: "8"

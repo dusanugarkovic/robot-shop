@@ -45,10 +45,12 @@ app.get('/health', (req, res) => {
 app.get('/products', (req, res) => {
     if (mongoConnected) {
         collection.find({}).toArray().then((products) => {
-            getPromotion(products[0].sku);
-            res.json(products);
+            getPromotion(products[0].sku).then((resp) => {
+                logger.info(resp);
+                res.json(products)
+            });
         }).catch((e) => {
-            logger.error('Error: ', err);
+            logger.error('Error: ', e);
             res.status(500).send(e);
         });
     } else {
@@ -73,7 +75,7 @@ app.get('/product/:sku', (req, res) => {
                 res.status(404).send('SKU not found');
             }
         }).catch((e) => {
-            logger.error('Error: ', err);
+            logger.error('Error: ', e);
             res.status(500).send(e);
         });
     } else {
@@ -87,7 +89,7 @@ app.get('/products/:cat', (req, res) => {
         collection.find({categories: req.params.cat}).sort({name: 1}).toArray().then((products) => {
             res.json(products);
         }).catch((e) => {
-            logger.error('Error: ', err);
+            logger.error('Error: ', e);
             res.status(500).send(e);
         });
     } else {
@@ -101,7 +103,7 @@ app.get('/categories', (req, res) => {
         collection.distinct('categories').then((categories) => {
             res.json(categories);
         }).catch((e) => {
-            logger.error('Error: ', err);
+            logger.error('Error: ', e);
             res.status(500).send(e);
         });
     } else {
@@ -115,7 +117,7 @@ app.get('/search/:text', (req, res) => {
         collection.find({'$text': {'$search': req.params.text}}).toArray().then((hits) => {
             res.json(hits);
         }).catch((e) => {
-            logger.error('Error: ', err);
+            logger.error('Error: ', e);
             res.status(500).send(e);
         });
     } else {
@@ -130,10 +132,10 @@ function getPromotion(sku) {
             method: 'POST'
         }, (error, response, body) => {
             if (error) {
-                logger.error('Error: ', err);
+                logger.error('Error: ', error);
                 reject(error);
             } else if (response.statusCode != 200) {
-                logger.error('Error: ', err);
+                logger.error('Error: ', error);
                 reject(error);
             } else {
                 resolve(JSON.parse(body));

@@ -1,14 +1,14 @@
 const request = require('request-promise-native');
 
-const webHost = process.env.WEB_HOST || 'http://35.193.134.114';
-const webPort = process.env.WEB_PORT || '8080';
-const webEndpoint = webHost + ":" + webPort;
+const webHostCatalogue = process.env.WEB_HOST_CATALOGUE || 'http://35.193.134.114';
+const webPortCatalogue = process.env.WEB_PORT_CATALOGUE || '8080';
+const webEndpointCatalogue = webHostCatalogue + ":" + webPortCatalogue;
 
 module.exports = {
     getAllCategories: async function () {
         return new Promise((resolve, reject) => {
             request({
-                url: webEndpoint + '/categories',
+                url: webEndpointCatalogue + '/categories',
                 method: 'GET'
             }, (error, response, body) => {
                 if (error) {
@@ -24,7 +24,7 @@ module.exports = {
     getAllProducts: async function () {
         return new Promise((resolve, reject) => {
             request({
-                url: webEndpoint + '/products',
+                url: webEndpointCatalogue + '/products',
                 method: 'GET'
             }, (error, response, body) => {
                 if (error) {
