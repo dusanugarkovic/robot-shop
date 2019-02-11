@@ -1,34 +1,30 @@
 package org.steveww.spark;
 
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-import spark.Spark;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.MapListHandler;
-import org.apache.commons.dbutils.DbUtils;
-import com.google.gson.Gson;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.sql.Connection;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Types;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import spark.Spark;
 
 public class Main {
     private static String CART_URL = null;
@@ -47,9 +43,9 @@ public class Main {
         //
         try {
             cpds = new ComboPooledDataSource();
-            cpds.setDriverClass( "com.mysql.jdbc.Driver" ); //loads the jdbc driver            
+            cpds.setDriverClass( "com.mysql.jdbc.Driver" ); //loads the jdbc driver
             cpds.setJdbcUrl( JDBC_URL );
-            cpds.setUser("shipping");                                  
+            cpds.setUser("shipping");
             cpds.setPassword("secret");
             // some config
             cpds.setMinPoolSize(5);
@@ -216,38 +212,38 @@ public class Main {
     }
 
     private static String addToCart(String id, String data) {
-        StringBuilder buffer = new StringBuilder();
+      String responseString = null;
 
-        DefaultHttpClient httpClient = null;
-        try {
-            // set timeout to 5 secs
-            HttpParams httpParams = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(httpParams, 5000);
+      CloseableHttpClient httpClient = null;
 
-            httpClient = new DefaultHttpClient(httpParams);
-            HttpPost postRequest = new HttpPost(CART_URL + id);
-            StringEntity payload = new StringEntity(data);
-            payload.setContentType("application/json");
-            postRequest.setEntity(payload);
-            HttpResponse res = httpClient.execute(postRequest);
+      try {
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+          // set timeout to 5 secs
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        requestConfigBuilder.setConnectTimeout(5000);
+        requestConfigBuilder.setConnectionRequestTimeout(5000);
 
-            if(res.getStatusLine().getStatusCode() == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
-                String line;
-                while((line = in.readLine()) != null) {
-                    buffer.append(line);
-                }
-            } else {
-                logger.warn("Failed with code: " + res.getStatusLine().getStatusCode());
-            }
-        } catch(Exception e) {
-            logger.error("http client exception", e);
-        } finally {
-            if(httpClient != null) {
-                httpClient.getConnectionManager().shutdown();
-            }
+        clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
+
+        httpClient = clientBuilder.build();
+
+        HttpPost postRequest = new HttpPost(CART_URL + id);
+        StringEntity payload = new StringEntity(data);
+        payload.setContentType("application/json");
+        postRequest.setEntity(payload);
+
+        HttpResponse res = httpClient.execute(postRequest);
+
+        if (res.getStatusLine().getStatusCode() == 200) {
+          HttpEntity entity = res.getEntity();
+          responseString = EntityUtils.toString(entity, "UTF-8");
+        } else {
+            logger.warn("Failed with code: " + res.getStatusLine().getStatusCode());
         }
+      } catch (Exception e) {
+          logger.error("http client exception", e);
+      }
 
-        return buffer.toString();
+      return responseString;
     }
 }
