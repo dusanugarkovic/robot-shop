@@ -1,39 +1,64 @@
 package org.steveww.spark;
 
-import com.google.gson.Gson;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.MapListHandler;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import spark.Spark;
-
-import java.beans.PropertyVetoException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
-public class Main {
-    private static final String JDBC_URL = String.format("jdbc:mysql://%s/cities?useSSL=false&autoReconnect=true", System.getenv("DB_HOST") != null ? System.getenv("DB_HOST") : "mysql");
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import spark.Spark;
+
+public class Main {
+    private static String CART_URL = null;
+    private static String JDBC_URL = null;
     private static Logger logger = LoggerFactory.getLogger(Main.class);
     private static ComboPooledDataSource cpds = null;
 
     public static void main(String[] args) {
-        connectToDatabase();
+        // Get ENV configuration values
+        CART_URL = String.format("http://%s/shipping/", System.getenv("CART_ENDPOINT") != null ? System.getenv("CART_ENDPOINT") : "cart");
+        JDBC_URL = String.format("jdbc:mysql://%s/cities?useSSL=false&autoReconnect=true", System.getenv("DB_HOST") != null ? System.getenv("DB_HOST") : "mysql");
+
+        //
+        // Create database connector
+        // TODO - might need a retry loop here
+        //
+        try {
+            cpds = new ComboPooledDataSource();
+            cpds.setDriverClass( "com.mysql.jdbc.Driver" ); //loads the jdbc driver
+            cpds.setJdbcUrl( JDBC_URL );
+            cpds.setUser("shipping");
+            cpds.setPassword("secret");
+            // some config
+            cpds.setMinPoolSize(5);
+            cpds.setAcquireIncrement(5);
+            cpds.setMaxPoolSize(20);
+            cpds.setMaxStatements(180);
+            cpds.setPreferredTestQuery("select 1");
+            cpds.setTestConnectionOnCheckin(true);
+            cpds.setIdleConnectionTestPeriod(60000);
+        }
+        catch(Exception e) {
+            logger.error("Database Exception", e);
+        }
 
         // Spark
         Spark.port(8080);
@@ -45,7 +70,7 @@ public class Main {
             try {
                 data = queryToJson("select count(*) as count from cities");
                 res.header("Content-Type", "application/json");
-            } catch (Exception e) {
+            } catch(Exception e) {
                 logger.error("count", e);
                 res.status(500);
                 data = "ERROR";
@@ -60,7 +85,7 @@ public class Main {
                 String query = "select code, name from codes order by name asc";
                 data = queryToJson(query);
                 res.header("Content-Type", "application/json");
-            } catch (Exception e) {
+            } catch(Exception e) {
                 logger.error("codes", e);
                 res.status(500);
                 data = "ERROR";
@@ -77,7 +102,7 @@ public class Main {
                 logger.info("Query " + query);
                 data = queryToJson(query, req.params(":code"));
                 res.header("Content-Type", "application/json");
-            } catch (Exception e) {
+            } catch(Exception e) {
                 logger.error("cities", e);
                 res.status(500);
                 data = "ERROR";
@@ -93,7 +118,7 @@ public class Main {
                 logger.info("Query " + query);
                 data = queryToJson(query, req.params(":code"), req.params(":text") + "%");
                 res.header("Content-Type", "application/json");
-            } catch (Exception e) {
+            } catch(Exception e) {
                 logger.error("match", e);
                 res.status(500);
                 data = "ERROR";
@@ -105,19 +130,23 @@ public class Main {
         Spark.get("/calc/:uuid", (req, res) -> {
             double homeLat = 51.164896;
             double homeLong = 7.068792;
+            String data;
 
-            res.header("Content-Type", "application/json");
             Location location = getLocation(req.params(":uuid"));
             Ship ship = new Ship();
-            if (location != null) {
+            if(location != null) {
                 long distance = location.getDistance(homeLat, homeLong);
                 // charge 0.05 Euro per km
                 // try to avoid rounding errors
                 double cost = Math.rint(distance * 5) / 100.0;
                 ship.setDistance(distance);
                 ship.setCost(cost);
+                res.header("Content-Type", "application/json");
+                data = new Gson().toJson(ship);
             } else {
-                res.status(500);
+                data = "no location";
+                logger.warn(data);
+                res.status(400);
             }
 
             return new Gson().toJson(ship);
@@ -128,7 +157,7 @@ public class Main {
             String cart = addToCart(req.params(":id"), req.body());
             logger.info("new cart " + cart);
 
-            if (cart.equals("")) {
+            if(cart.equals("")) {
                 res.status(404);
             } else {
                 res.header("Content-Type", "application/json");
@@ -140,17 +169,17 @@ public class Main {
         logger.info("Ready");
     }
 
+
+
     /**
      * Query to Json - QED
      **/
-    private static String queryToJson(String query, Object... args) {
+    private static String queryToJson(String query, Object ... args) {
         List<Map<String, Object>> listOfMaps = null;
-
         try {
             QueryRunner queryRunner = new QueryRunner(cpds);
             listOfMaps = queryRunner.query(query, new MapListHandler(), args);
         } catch (SQLException se) {
-//            queryToJson(query, args);
             throw new RuntimeException("Couldn't query the database.", se);
         }
 
@@ -163,20 +192,21 @@ public class Main {
     private static Location getLocation(String uuid) {
         Location location = null;
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         ResultSet rs = null;
-        String query = "select latitude, longitude from cities where uuid = " + uuid;
+        String query = "select latitude, longitude from cities where uuid = ?";
 
         try {
             conn = cpds.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(query);
-            while (rs.next()) {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, Integer.parseInt(uuid));
+            rs = stmt.executeQuery();
+            while(rs.next()) {
                 location = new Location(rs.getDouble(1), rs.getDouble(2));
                 break;
             }
-        } catch (Exception e) {
-            logger.error("Query exception", e);
+        } catch(Exception e) {
+            logger.error("Location exception", e);
         } finally {
             DbUtils.closeQuietly(conn, stmt, rs);
         }
@@ -185,58 +215,38 @@ public class Main {
     }
 
     private static String addToCart(String id, String data) {
-        final String cartUrl = String.format("http://%s/shipping/", System.getenv("CART_ENDPOINT") != null ? System.getenv("CART_ENDPOINT") : "cart");
+      String responseString = null;
 
-        StringBuilder buffer = new StringBuilder();
+      CloseableHttpClient httpClient = null;
 
-        DefaultHttpClient httpClient = null;
-        try {
-            // set timeout to 5 secs
-            HttpParams httpParams = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(httpParams, 5000);
+      try {
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+          // set timeout to 5 secs
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        requestConfigBuilder.setConnectTimeout(5000);
+        requestConfigBuilder.setConnectionRequestTimeout(5000);
 
-            httpClient = new DefaultHttpClient(httpParams);
-            HttpPost postRequest = new HttpPost(cartUrl + id);
-            StringEntity payload = new StringEntity(data);
-            payload.setContentType("application/json");
-            postRequest.setEntity(payload);
-            HttpResponse res = httpClient.execute(postRequest);
+        clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
-            if (res.getStatusLine().getStatusCode() == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
-                String line;
-                while ((line = in.readLine()) != null) {
-                    buffer.append(line);
-                }
-            } else {
-                logger.warn("Failed with code: " + res.getStatusLine().getStatusCode());
-            }
-        } catch (Exception e) {
-            logger.error("http client exception", e);
-        } finally {
-            if (httpClient != null) {
-                httpClient.getConnectionManager().shutdown();
-            }
+        httpClient = clientBuilder.build();
+
+        HttpPost postRequest = new HttpPost(CART_URL + id);
+        StringEntity payload = new StringEntity(data);
+        payload.setContentType("application/json");
+        postRequest.setEntity(payload);
+
+        HttpResponse res = httpClient.execute(postRequest);
+
+        if (res.getStatusLine().getStatusCode() == 200) {
+          HttpEntity entity = res.getEntity();
+          responseString = EntityUtils.toString(entity, "UTF-8");
+        } else {
+            logger.warn("Failed with code: " + res.getStatusLine().getStatusCode());
         }
+      } catch (Exception e) {
+          logger.error("http client exception", e);
+      }
 
-        return buffer.toString();
-    }
-
-    private static void connectToDatabase() {
-        try {
-            cpds = new ComboPooledDataSource();
-            cpds.setJdbcUrl(JDBC_URL);
-            cpds.setUser("shipping");
-            cpds.setPassword("secret");
-//            cpds.setMinPoolSize(5);
-            cpds.setAcquireRetryDelay(1000);
-            cpds.setAcquireRetryAttempts(3);
-            cpds.setAcquireIncrement(5);
-            cpds.setMaxPoolSize(100);
-            cpds.setMaxStatements(300);
-            cpds.setDriverClass("com.mysql.jdbc.Driver");
-        } catch (PropertyVetoException e) {
-            logger.error("Database Exception", e);
-        }
+      return responseString;
     }
 }

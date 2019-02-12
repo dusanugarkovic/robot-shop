@@ -52,21 +52,20 @@ app.get('/products', (req, res) => {
 // product by SKU
 app.get('/product/:sku', (req, res) => {
     collection.findOne({sku: req.params.sku}).then((product) => {
-        logger.info('product: ', JSON.stringify(product));
+        console.log('product: ', JSON.stringify(product));
         if (product) {
-            getPromotion(product.sku).then((resp) => {
+            getDiscount(product.sku).then((resp) => {
                 product.price = product.price * (1 - resp.discount);
-                logger.info('product price reduced: ' + product.price);
+                console.log('product price reduced: ' + product.price);
                 res.json(product);
-            }).catch((e) => {
-                logger.error('Error: ', e);
-                res.status(500).send(e);
+            }).catch((err) => {
+                res.status(500).send(err);
             });
         } else {
             res.status(404).send('SKU not found');
         }
     }).catch((e) => {
-        logger.error('Error: ', e);
+        console.log('ERROR', e);
         res.status(500).send(e);
     });
 });
@@ -101,17 +100,15 @@ app.get('/search/:text', (req, res) => {
     });
 });
 
-function getPromotion(sku) {
+function getDiscount(sku) {
     return new Promise((resolve, reject) => {
         request({
-            url: 'http://promotion-svc:8080/search?sku=' + sku,
-            method: 'POST'
+            url: 'http://discount-svc:8080/find/' + sku,
+            method: 'GET'
         }, (error, response, body) => {
             if (error) {
-                logger.error('Error: ', error);
                 reject(error);
             } else if (response.statusCode != 200) {
-                logger.error('Error: ', error);
                 reject(error);
             } else {
                 resolve(JSON.parse(body));
@@ -133,7 +130,6 @@ function mongoConnect() {
     });
 }
 
-// fire it up!
 const port = process.env.CATALOGUE_SERVER_PORT || '8080';
 app.listen(port, () => {
     logger.info('Started on port', port);

@@ -5,22 +5,31 @@ instana({
     }
 });
 
-const logger = require('bunyan').createLogger({
-    name: 'catalogue',
-    level: 'info'
-});
-
 const mongoose = require('mongoose');
 
 const redis = require('redis');
 const bodyParser = require('body-parser');
 const express = require('express');
+const pino = require('pino');
+const expPino = require('express-pino-logger');
 
 var usersCollection;
 var ordersCollection;
 var mongoConnected = false;
 
+const logger = pino({
+    level: 'info',
+    prettyPrint: false,
+    useLevelLabels: true
+});
+const expLogger = expPino({
+    logger: logger
+
+});
+
 const app = express();
+app.use(expLogger);
+
 app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
     res.set('Access-Control-Allow-Origin', '*');
@@ -41,6 +50,7 @@ app.get('/health', (req, res) => {
 
 // use REDIS INCR to track anonymous users
 app.get('/uniqueid', (req, res) => {
+    req.log.error('Unique ID test');
     // get number from Redis
     redisClient.incr('anonymous-counter', (e, r) => {
         if (!e) {
@@ -48,10 +58,29 @@ app.get('/uniqueid', (req, res) => {
                 uuid: 'anonymous-' + r
             });
         } else {
-            logger.error('ERROR', e);
-            res.status(500).send(e);
+            req.log.error('ERROR', err);
+            res.status(500).send(err);
         }
     });
+});
+
+// check user exists
+app.get('/check/:id', (req, res) => {
+    if(mongoConnected) {
+        usersCollection.findOne({name: req.params.id}).then((user) => {
+            if(user) {
+                res.send('OK');
+            } else {
+                res.status(404).send('user not found');
+            }
+        }).catch((e) => {
+            req.log.error(e);
+            res.send(500).send(e);
+        });
+    } else {
+        req.log.error('database not available');
+        res.status(500).send('database not available');
+    }
 });
 
 // return all users for debugging only
@@ -60,23 +89,25 @@ app.get('/users', (req, res) => {
         usersCollection.find().toArray().then((users) => {
             res.json(users);
         }).catch((e) => {
-            logger.error('ERROR', e);
+            req.log.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
+        req.log.error('database not available');
         res.status(500).send('database not available');
     }
 });
 
 app.post('/login', (req, res) => {
-    logger.info('login', req.body);
+    req.log.info('login', req.body);
     if (req.body.name === undefined || req.body.password === undefined) {
+        req.log.warn('credentails not complete');
         res.status(400).send('name or passowrd not supplied');
     } else if (mongoConnected) {
         usersCollection.findOne({
             name: req.body.name,
         }).then((user) => {
-            logger.info('user', user);
+            req.log.info('user', user);
             if (user) {
                 if (user.password == req.body.password) {
                     res.json(user);
@@ -87,23 +118,26 @@ app.post('/login', (req, res) => {
                 res.status(404).send('name not found');
             }
         }).catch((e) => {
-            logger.error('ERROR', e);
+            req.log.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
+        req.log.error('database not available');
         res.status(500).send('database not available');
     }
 });
 
 // TODO - validate email address format
 app.post('/register', (req, res) => {
-    logger.info('register', req.body);
+    req.log.info('register', req.body);
     if (req.body.name === undefined || req.body.password === undefined || req.body.email === undefined) {
+        req.log.warn('insufficient data');
         res.status(400).send('insufficient data');
     } else if (mongoConnected) {
         // check if name already exists
         usersCollection.findOne({name: req.body.name}).then((user) => {
             if (user) {
+                req.log.warn('user already exists');
                 res.status(400).send('name already exists');
             } else {
                 // create new user
@@ -112,24 +146,25 @@ app.post('/register', (req, res) => {
                     password: req.body.password,
                     email: req.body.email
                 }).then((r) => {
-                    logger.info('inserted', r.result);
+                    req.log.info('inserted', r.result);
                     res.send('OK');
                 }).catch((e) => {
-                    logger.error('ERROR', e);
+                    req.log.error('ERROR', e);
                     res.status(500).send(e);
                 });
             }
         }).catch((e) => {
-            logger.error('ERROR', e);
+            req.log.error('ERROR', e);
             res.status(500).send(e);
         });
     } else {
+        req.log.error('database not available');
         res.status(500).send('database not available');
     }
 });
 
 app.post('/order/:id', (req, res) => {
-    logger.info('order', req.body);
+    req.log.info('order', req.body);
     // only for registered users
     if (mongoConnected) {
         usersCollection.findOne({
@@ -150,6 +185,7 @@ app.post('/order/:id', (req, res) => {
                         ).then((r) => {
                             res.send('OK');
                         }).catch((e) => {
+                            req.log.error(e);
                             res.status(500).send(e);
                         });
                     } else {
@@ -160,19 +196,23 @@ app.post('/order/:id', (req, res) => {
                         }).then((r) => {
                             res.send('OK');
                         }).catch((e) => {
+                            req.log.error(e);
                             res.status(500).send(e);
                         });
                     }
                 }).catch((e) => {
+                    req.log.error(e);
                     res.status(500).send(e);
                 });
             } else {
                 res.status(404).send('name not found');
             }
         }).catch((e) => {
+            req.log.error(e);
             res.status(500).send(e);
         });
     } else {
+        req.log.error('database not available');
         res.status(500).send('database not available');
     }
 });
@@ -188,9 +228,11 @@ app.get('/history/:id', (req, res) => {
                 res.status(404).send('history not found');
             }
         }).catch((e) => {
+            req.log.error(e);
             res.status(500).send(e);
         });
     } else {
+        req.log.error('database not available');
         res.status(500).send('database not available');
     }
 });
@@ -201,22 +243,22 @@ var redisClient = redis.createClient({
 });
 
 redisClient.on('error', (e) => {
-    console.log('Redis ERROR', e);
+    console.error('Redis ERROR', e);
 });
 redisClient.on('ready', (r) => {
-    console.log('Redis READY', r);
+    console.info('Redis READY', r);
 });
 
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/users', {
         useNewUrlParser: true
     }).then(() => {
-        logger.info('Connecting to database successful.');
+        console.info('Connecting to database successful.');
         mongoConnected = true;
         usersCollection = mongoose.connection.collection('users');
         ordersCollection = mongoose.connection.collection('orders');
     }).catch(err => {
-        logger.error('Could not connect to Mongo DB: ', err);
+        console.error('Could not connect to Mongo DB: ', err);
         mongoConnect();
     });
 }
@@ -224,5 +266,6 @@ function mongoConnect() {
 // fire it up!
 const port = process.env.USER_SERVER_PORT || '8080';
 app.listen(port, () => {
-    console.log('Started on port', port);
+    console.info('Started on port', port);
 });
+

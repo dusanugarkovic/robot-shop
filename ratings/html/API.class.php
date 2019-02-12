@@ -1,4 +1,9 @@
 <?php
+// load composer installed files
+require_once(__DIR__.'/vendor/autoload.php');
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 abstract class API {
     protected $method = '';
 
@@ -10,7 +15,14 @@ abstract class API {
 
     protected $file = Null;
 
+    protected $logger = Null;
+
+    protected $logHandler = Null;
+
     public function __construct($request) {
+        // Logging
+        $this->logHandler = new StreamHandler('php://stdout', Logger::INFO);
+
         // CORS
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: *');
