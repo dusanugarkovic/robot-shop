@@ -52,6 +52,9 @@ public class Main {
             cpds.setAcquireIncrement(5);
             cpds.setMaxPoolSize(20);
             cpds.setMaxStatements(180);
+            cpds.setPreferredTestQuery("select 1");
+            cpds.setTestConnectionOnCheckin(true);
+            cpds.setIdleConnectionTestPeriod(60000);
         }
         catch(Exception e) {
             logger.error("Database Exception", e);
