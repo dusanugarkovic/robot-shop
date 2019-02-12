@@ -21,20 +21,20 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: WEB_HOST
-              value: "http://catalogue"
+              value: "http://web"
             - name: WEB_PORT
               value: "8080"
             - name: LOAD_CONCURRENCY
               value: "3"
             - name: LOAD_REQUESTS_PER_SECOND
-              value: "1"
+              value: "3"
           ports:
             - containerPort: 8080
           resources:
             limits:
-              cpu: 300m
-              memory: 200Mi
+              cpu: 400m
+              memory: 300Mi
             requests:
-              cpu: 100m
-              memory: 100Mi
+              cpu: 200m
+              memory: 200Mi
       restartPolicy: Always

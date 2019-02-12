@@ -16,7 +16,11 @@ module.exports = {
                 },
                 json: true
             }, (error, response, body) => {
-                error ? reject(error) : resolve(body);
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("login - Error: " + response.statusMessage) :
+                        resolve(body);
             });
         });
     },
@@ -26,7 +30,11 @@ module.exports = {
                 url: webEndpoint + '/api/user/uniqueid',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getUser - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -36,7 +44,11 @@ module.exports = {
                 url: webEndpoint + '/api/catalogue/categories',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getAllCategories - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -46,7 +58,11 @@ module.exports = {
                 url: webEndpoint + '/api/catalogue/products',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getAllProducts - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -56,7 +72,11 @@ module.exports = {
                 url: webEndpoint + '/api/catalogue/product/' + sku,
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getProduct - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -66,7 +86,11 @@ module.exports = {
                 url: webEndpoint + '/api/ratings/api/rate/' + sku + '/' + mark,
                 method: 'PUT'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("rate - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -76,7 +100,11 @@ module.exports = {
                 url: webEndpoint + '/api/ratings/api/fetch/' + sku,
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getRating - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -86,7 +114,11 @@ module.exports = {
                 url: webEndpoint + '/api/cart/add/' + uuid + '/' + sku + '/1',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("addToCart - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -96,7 +128,11 @@ module.exports = {
                 url: webEndpoint + '/api/cart/update/' + uuid + '/' + sku + '/2',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("updateCart - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -106,7 +142,11 @@ module.exports = {
                 url: webEndpoint + '/api/cart/cart/' + uuid,
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getCart - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -116,7 +156,11 @@ module.exports = {
                 url: webEndpoint + '/api/shipping/codes',
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getCodes - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -126,7 +170,11 @@ module.exports = {
                 url: webEndpoint + '/api/shipping/cities/' + code,
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("getCities - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -136,7 +184,11 @@ module.exports = {
                 url: webEndpoint + '/api/shipping/calc/' + cityUuid,
                 method: 'GET'
             }, (error, response, body) => {
-                error ? reject(error) : resolve(JSON.parse(body));
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("calculateShipping - Error: " + response.statusMessage) :
+                        resolve(JSON.parse(body));
             });
         });
     },
@@ -148,7 +200,11 @@ module.exports = {
                 body: shipping,
                 json: true
             }, (error, response, body) => {
-                error ? reject(error) : resolve(body);
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("confirmShipping - Error: " + response.statusMessage) :
+                        resolve(body);
             });
         });
     },
@@ -160,7 +216,11 @@ module.exports = {
                 body: cart,
                 json: true
             }, (error, response, body) => {
-                error ? reject(error) : resolve(body);
+                error ?
+                    reject(error) :
+                    response.statusCode < 200 || response.statusCode > 299 ?
+                        reject("pay - Error: " + response.statusMessage) :
+                        resolve(body);
             });
         });
     }

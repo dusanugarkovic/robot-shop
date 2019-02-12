@@ -31,11 +31,16 @@ app.listen(process.env.SERVER_PORT || 8081);
 load.load();
 
 app.get('/', async (req, res, next) => {
-    const userInfo = await calls.login();
-    logger.info('Login: ', userInfo);
-
-    const result = await goShopping();
-    res.send("OK");
+    try {
+        const userInfo = await calls.login();
+        logger.info('Login: ', JSON.stringify(userInfo));
+    
+        const result = await goShopping();
+        res.json(result);
+    } catch(error) {
+        logger.error(error);
+        res.send(error);
+    }
 });
 
 async function goShopping() {
