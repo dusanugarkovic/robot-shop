@@ -50,9 +50,9 @@ public class Main {
             // some config
             cpds.setMinPoolSize(5);
             cpds.setAcquireIncrement(5);
-            cpds.setMaxPoolSize(20);
+            cpds.setMaxPoolSize(30);
             cpds.setMaxStatements(180);
-            cpds.setCheckoutTimeout(2000);
+            cpds.setCheckoutTimeout(5000);
         }
         catch(Exception e) {
             logger.error("Database Exception", e);
