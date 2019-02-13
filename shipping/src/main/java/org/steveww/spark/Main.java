@@ -52,9 +52,7 @@ public class Main {
             cpds.setAcquireIncrement(5);
             cpds.setMaxPoolSize(20);
             cpds.setMaxStatements(180);
-            cpds.setPreferredTestQuery("select 1");
-            cpds.setTestConnectionOnCheckin(true);
-            cpds.setIdleConnectionTestPeriod(60000);
+            cpds.setCheckoutTimeout(2000);
         }
         catch(Exception e) {
             logger.error("Database Exception", e);
@@ -98,7 +96,7 @@ public class Main {
         Spark.get("/cities/:code", (req, res) -> {
             String data;
             try {
-                String query = "select uuid, name from cities where country_code = ?";
+                String query = "select uuid, name from cities where country_code = ? order by rand() limit 5";
                 logger.info("Query " + query);
                 data = queryToJson(query, req.params(":code"));
                 res.header("Content-Type", "application/json");
