@@ -38,7 +38,9 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-mongoConnect();
+if (!mongoConnected) {
+    mongoConnect();
+}
 
 app.get('/health', (req, res) => {
     var stat = {
@@ -50,7 +52,7 @@ app.get('/health', (req, res) => {
 
 // use REDIS INCR to track anonymous users
 app.get('/uniqueid', (req, res) => {
-    req.log.error('Unique ID test');
+    req.log.info('Unique ID test');
     // get number from Redis
     redisClient.incr('anonymous-counter', (e, r) => {
         if (!e) {
@@ -66,9 +68,9 @@ app.get('/uniqueid', (req, res) => {
 
 // check user exists
 app.get('/check/:id', (req, res) => {
-    if(mongoConnected) {
+    if (mongoConnected) {
         usersCollection.findOne({name: req.params.id}).then((user) => {
-            if(user) {
+            if (user) {
                 res.send('OK');
             } else {
                 res.status(404).send('user not found');
@@ -251,6 +253,8 @@ redisClient.on('ready', (r) => {
 
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/users', {
+        reconnectTries: 999,
+        reconnectInterval: 5000,
         useNewUrlParser: true
     }).then(() => {
         console.info('Connecting to database successful.');
