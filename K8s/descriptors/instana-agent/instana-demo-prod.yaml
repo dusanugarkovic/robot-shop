@@ -16,7 +16,7 @@ metadata:
   namespace: instana-agent
 type: Opaque
 data:
-  key: c2MtZ0JkcC1ScW1BcWFyeUZ1XzZrdwo=
+  key: MkVXcThPMm9UNEdaS0pOa2g2S0I3UQo=
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -88,7 +88,7 @@ spec:
             - name: INSTANA_AGENT_LEADER_ELECTOR_PORT
               value: "42655"
             - name: INSTANA_ZONE
-              value: k8s-demo-dev
+              value: k8s-demo
             - name: INSTANA_AGENT_ENDPOINT
               value: saas-eu-west-1.instana.io
             - name: INSTANA_AGENT_ENDPOINT_PORT

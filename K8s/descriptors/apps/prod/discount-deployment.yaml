@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discount
+  labels:
+    app: discount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discount
+  template:
+    metadata:
+      labels:
+        app: discount
+    spec:
+      containers:
+      - name: discount
+        image: gcr.io/peppy-vertex-158106/robot-shop/rs-discount:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 400m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
