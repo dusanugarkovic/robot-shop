@@ -1,6 +1,6 @@
 const request = require('request-promise-native');
 
-const webHost = process.env.WEB_HOST || 'http://35.193.44.124';
+const webHost = process.env.WEB_HOST || 'http://35.184.201.202';
 const webPort = process.env.WEB_PORT || '8080';
 const webEndpoint = webHost + ":" + webPort;
 

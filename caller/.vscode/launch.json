@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/server.js"
+            "program": "/Users/ivansavic/Workspace/robot-shop/caller/src/server.js"
         }
     ]
 }

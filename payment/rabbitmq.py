@@ -1,12 +1,15 @@
 import json
 import pika
 import os
+from threading import Thread
+
 
 class Publisher:
     HOST = os.getenv('AMQP_HOST', 'rabbitmq')
+    # HOST = '35.202.10.192'
     VIRTUAL_HOST = '/'
-    EXCHANGE='robot-shop'
-    TYPE='direct'
+    EXCHANGE = 'robot-shop'
+    TYPE = 'direct'
     ROUTING_KEY = 'orders'
 
     def __init__(self, logger):
@@ -26,25 +29,31 @@ class Publisher:
             self._logger.info('connected to broker')
 
     def _publish(self, msg, headers):
+        thread = Thread(target=self._threaded_publish, args=(msg, headers))
+        thread.start()
+        thread.join()
+
+    def _threaded_publish(self, msg, headers):
         self._channel.basic_publish(exchange=self.EXCHANGE,
                                     routing_key=self.ROUTING_KEY,
                                     properties=pika.BasicProperties(headers=headers),
                                     body=json.dumps(msg).encode())
         self._logger.info('message sent')
 
-    #Publish msg, reconnecting if necessary.
+    # Publish msg, reconnecting if necessary.
     def publish(self, msg, headers):
         if self._channel is None:
             self._connect()
         try:
             self._publish(msg, headers)
-        except pika.exceptions.ConnectionClosed:
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
+            self._logger.warn(error)
             self._logger.info('reconnecting to queue')
             self._connect()
             self._publish(msg, headers)
 
-    def close(self):
-        if self._conn and self._conn.is_open:
-            self._logger.info('closing queue connection')
-            self._conn.close()
 
+def close(self):
+    if self._conn and self._conn.is_open:
+        self._logger.info('closing queue connection')
+        self._conn.close()

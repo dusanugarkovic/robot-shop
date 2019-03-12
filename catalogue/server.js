@@ -20,7 +20,9 @@ var mongoConnected = false;
 
 const app = express();
 
-mongoConnect();
+if (!mongoConnected) {
+    mongoConnect();
+}
 
 app.use((req, res, next) => {
     res.set('Timing-Allow-Origin', '*');
@@ -119,6 +121,10 @@ function getDiscount(sku) {
 
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/catalogue', {
+        poolSize: 10,
+        socketTimeoutMS: 45000,
+        reconnectTries: 999,
+        reconnectInterval: 5000,
         useNewUrlParser: true
     }).then(() => {
         logger.info('Connecting to database successful.');

@@ -4,3 +4,4 @@
 vendor/
 Gopkg.lock
 .idea/
+.venv/

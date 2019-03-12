@@ -26,20 +26,18 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.listen(process.env.SERVER_PORT || 8081);
+var server = app.listen(process.env.SERVER_PORT || 8081);
+server.setTimeout(60000);
 
-load.load();
+// load.load();
 
 app.get('/', async (req, res, next) => {
     try {
-        const userInfo = await calls.login();
-        logger.info('Login: ', JSON.stringify(userInfo));
-    
-        const result = await goShopping();
-        res.json(result);
-    } catch(error) {
-        logger.error(error);
-        res.send(error);
+        await calls.login();
+        let odrderId = await goShopping();
+        res.status(200).json(odrderId);
+    } catch (err) {
+        res.status(500).json(err);
     }
 });
 
@@ -47,7 +45,7 @@ async function goShopping() {
     const userResponse = await calls.getUser();
     const uuid = userResponse.uuid;
 
-    var categories = await calls.getAllCategories();
+    await calls.getAllCategories();
 
     const products = await calls.getAllProducts();
 
@@ -91,24 +89,23 @@ async function goShopping() {
 }
 
 async function workWithCart(uuid, products) {
-    var sku;
+    let sku;
     while (true) {
         const product = await helper.getRandomElement(products);
-        if (product.instock != 0) {
+        if (product.instock !== 0) {
             sku = product.sku;
             break;
         }
     }
 
     if (helper.getRandomInt(0, 10) < 5)
-        await calls.rate(sku, helper.getRandomInt(1, 5))
+        await calls.rate(sku, helper.getRandomInt(1, 5));
 
-    var product = await calls.getProduct(sku);
+    let product = await calls.getProduct(sku);
     logger.info('Product: ', JSON.stringify(product));
 
-    var rating = await calls.getRating(sku);
+    let rating = await calls.getRating(sku);
     logger.info('Rating: ' + JSON.stringify(rating));
 
-    const cart = await calls.addToCart(uuid, sku);
-    return cart;
+    return await calls.addToCart(uuid, sku);
 }

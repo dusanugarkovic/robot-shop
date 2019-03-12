@@ -1,3 +1,4 @@
+import instana
 import os
 import sys
 import time
@@ -5,6 +6,7 @@ import logging
 import uuid
 import json
 import requests
+import random
 import traceback
 import opentracing as ot
 import opentracing.ext.tags as tags
@@ -17,7 +19,25 @@ app = Flask(__name__)
 
 CART = os.getenv('CART_HOST', 'cart')
 USER = os.getenv('USER_HOST', 'user')
-PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', 'https://paypal.com/')
+# CART = '35.194.7.135'
+# USER = '35.184.64.156'
+
+ONLINE_PAYMENTS = [
+    'https://paypal.com',
+    'https://wetransfer.com',
+    'https://www.2checkout.com',
+    'https://www.payoneer.com',
+    'https://stripe.com',
+    'https://pay.google.com',
+    'https://www.authorize.net',
+    'https://www.intuit.com',
+    'https://www.dwolla.com',
+    'https://www.braintreepayments.com',
+    'https://pay.amazon.com'
+]
+
+
+# PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', 'https://paypal.com/')
 
 @app.errorhandler(Exception)
 def exception_handler(err):
@@ -28,16 +48,19 @@ def exception_handler(err):
     for line in tblines:
         logkv['stack{}'.format(count)] = line
         count += 1
-    ot.tracer.active_span.log_kv(logkv)
+    # ot.tracer.active_span.log_kv(logkv)
     app.logger.error(str(err))
     return str(err), 500
+
 
 @app.route('/health', methods=['GET'])
 def health():
     return 'OK'
 
+
 @app.route('/pay/<id>', methods=['POST'])
 def pay(id):
+    payment_gateway = random.choice(ONLINE_PAYMENTS)
     app.logger.info('payment for {}'.format(id))
     cart = request.get_json()
     app.logger.info(cart)
@@ -66,8 +89,8 @@ def pay(id):
 
     # dummy call to payment gateway, hope they dont object
     try:
-        req = requests.get(PAYMENT_GATEWAY)
-        app.logger.info('{} returned {}'.format(PAYMENT_GATEWAY, req.status_code))
+        req = requests.get(payment_gateway)
+        app.logger.info('{} returned {}'.format(payment_gateway, req.status_code))
     except requests.exceptions.RequestException as err:
         app.logger.error(err)
         return str(err), 500
@@ -76,14 +99,14 @@ def pay(id):
 
     # Generate order id
     orderid = str(uuid.uuid4())
-    queueOrder({ 'orderid': orderid, 'user': id, 'cart': cart })
+    queueOrder({'orderid': orderid, 'user': id, 'cart': cart})
 
     # add to order history
     if not anonymous_user:
         try:
             req = requests.post('http://{user}:8080/order/{id}'.format(user=USER, id=id),
-                    data=json.dumps({'orderid': orderid, 'cart': cart}),
-                    headers={'Content-Type': 'application/json'})
+                                data=json.dumps({'orderid': orderid, 'cart': cart}),
+                                headers={'Content-Type': 'application/json'})
             app.logger.info('order history returned {}'.format(req.status_code))
         except requests.exceptions.RequestException as err:
             app.logger.error(err)
@@ -91,7 +114,7 @@ def pay(id):
 
     # delete cart
     try:
-        req = requests.delete('http://{cart}:8080/cart/{id}'.format(cart=CART, id=id));
+        req = requests.delete('http://{cart}:8080/cart/{id}'.format(cart=CART, id=id))
         app.logger.info('cart delete returned {}'.format(req.status_code))
     except requests.exceptions.RequestException as err:
         app.logger.error(err)
@@ -99,7 +122,7 @@ def pay(id):
     if req.status_code != 200:
         return 'order history update error', req.status_code
 
-    return jsonify({ 'orderid': orderid })
+    return jsonify({'orderid': orderid})
 
 
 def queueOrder(order):
@@ -110,19 +133,18 @@ def queueOrder(order):
 
     parent_span = ot.tracer.active_span
     with ot.tracer.start_active_span('queueOrder', child_of=parent_span,
-            tags={
-                    'exchange': Publisher.EXCHANGE,
-                    'key': Publisher.ROUTING_KEY
-                }) as tscope:
+                                     tags={
+                                         'exchange': Publisher.EXCHANGE,
+                                         'key': Publisher.ROUTING_KEY
+                                     }) as tscope:
         with ot.tracer.start_active_span('rabbitmq', child_of=tscope.span,
-                tags={
-                    'exchange': Publisher.EXCHANGE,
-                    'sort': 'publish',
-                    'address': Publisher.HOST,
-                    'key': Publisher.ROUTING_KEY
-                    }
-                ) as scope:
-
+                                         tags={
+                                             'exchange': Publisher.EXCHANGE,
+                                             'sort': 'publish',
+                                             'address': Publisher.HOST,
+                                             'key': Publisher.ROUTING_KEY
+                                         }
+                                         ) as scope:
             # For screenshot demo requirements optionally add in a bit of delay
             delay = int(os.getenv('PAYMENT_DELAY_MS', 0))
             time.sleep(delay / 1000)
@@ -141,10 +163,10 @@ if __name__ == "__main__":
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(logging.INFO)
     fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #sh.setFormatter(fmt)
-    #app.logger.addHandler(sh)
+    # sh.setFormatter(fmt)
+    # app.logger.addHandler(sh)
     app.logger.setLevel(logging.INFO)
-    app.logger.info('Payment gateway {}'.format(PAYMENT_GATEWAY))
+    # app.logger.info('Payment gateway {}'.format(PAYMENT_GATEWAY))
     port = int(os.getenv("SHOP_PAYMENT_PORT", "8080"))
     app.logger.info('Starting on port {}'.format(port))
     app.run(host='0.0.0.0', port=port)

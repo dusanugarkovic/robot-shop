@@ -9,6 +9,9 @@ public class Location {
         this.longitude = longitude;
     }
 
+    public Location() {
+    }
+
     public double getLatitude() {
         return this.latitude;
     }
@@ -24,7 +27,6 @@ public class Location {
      * Formula is Haversine https://www.movable-type.co.uk/scripts/latlong.html
      **/
     public long getDistance(double targetLatitude, double targetLongitude) {
-        double distance = 0.0;
         double earthRadius = 6371e3; // meters
 
         // convert to radians
@@ -38,6 +40,6 @@ public class Location {
 
         double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
 
-        return (long)Math.rint(earthRadius * c / 1000.0);
+        return (long) Math.rint(earthRadius * c / 1000.0);
     }
 }
