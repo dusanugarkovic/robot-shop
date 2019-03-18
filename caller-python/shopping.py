@@ -1,12 +1,17 @@
 import calls
+import logging
 from random import choice
 from random import randint
-import logging
+import time
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 
 
-def go_shopping():
+def go_shopping(request_id):
+    start_time = time.time()
+    logging.info(str(datetime.now()) +
+                 ' - START: Request with ID: ' + str(request_id))
     calls.login()
     uuid = calls.get_user()['uuid']
     calls.get_all_categories()
@@ -31,6 +36,12 @@ def go_shopping():
 
     order = calls.pay_cart(uuid, cart)
     logging.info(order)
+
+    end_time = time.time()
+    logging.info(str(datetime.now()) +
+                 ' - END: Request with ID: ' + str(request_id))
+    logging.info('Request ' + str(request_id) + ' duration: '
+                 + str(end_time-start_time) + ' s')
 
     return order
 

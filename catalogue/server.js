@@ -100,7 +100,7 @@ app.get('/search/:text', (req, res) => {
         logger.error('Error: ', e);
         res.status(500).send(e);
     });
-});
+})
 
 function getDiscount(sku) {
     return new Promise((resolve, reject) => {
@@ -121,10 +121,10 @@ function getDiscount(sku) {
 
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/catalogue', {
-        poolSize: 10,
-        socketTimeoutMS: 45000,
-        reconnectTries: 999,
-        reconnectInterval: 5000,
+        poolSize: 20,
+        socketTimeoutMS: 15000,
+        reconnectTries: 5,
+        reconnectInterval: 3000,
         useNewUrlParser: true
     }).then(() => {
         logger.info('Connecting to database successful.');
