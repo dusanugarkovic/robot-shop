@@ -3,20 +3,24 @@ require_once 'API.class.php';
 
 use Monolog\Logger;
 
-class RatingsAPI extends API {
-    public function __construct($request, $origin) {
+class RatingsAPI extends API
+{
+    public function __construct($request, $origin)
+    {
         parent::__construct($request);
         // Logging
         $this->logger = new Logger('RatingsAPI');
         $this->logger->pushHandler($this->logHandler);
     }
 
-    protected function health() {
+    protected function health()
+    {
         $this->logger->info('health OK');
         return 'OK';
     }
 
-    protected function dump() {
+    protected function dump()
+    {
         $data = array();
         $data['method'] = $this->method;
         $data['verb'] = $this->verb;
@@ -26,10 +30,11 @@ class RatingsAPI extends API {
     }
 
     // ratings/fetch/sku
-    protected function fetch() {
-        if($this->method == 'GET' && isset($this->verb) && count($this->args) == 0) {
+    protected function fetch()
+    {
+        if ($this->method == 'GET' && isset($this->verb) && count($this->args) == 0) {
             $sku = $this->verb;
-            if(! $this->_checkSku($sku)) {
+            if (!$this->_checkSku($sku)) {
                 throw new Exception("$sku not found", 404);
             }
             $data = $this->_getRating($sku);
@@ -41,18 +46,19 @@ class RatingsAPI extends API {
     }
 
     // ratings/rate/sku/score
-    protected function rate() {
-        if($this->method == 'PUT' && isset($this->verb) && count($this->args) == 1) {
+    protected function rate()
+    {
+        if ($this->method == 'PUT' && isset($this->verb) && count($this->args) == 1) {
             $sku = $this->verb;
             $score = intval($this->args[0]);
             $score = min(max(1, $score), 5);
 
-            if(! $this->_checkSku($sku)) {
+            if (!$this->_checkSku($sku)) {
                 throw new Exception("$sku not found", 404);
             }
 
             $rating = $this->_getRating($sku);
-            if($rating['avg_rating'] == 0) {
+            if ($rating['avg_rating'] == 0) {
                 // not rated yet
                 $this->_insertRating($sku, $score);
             } else {
@@ -68,13 +74,14 @@ class RatingsAPI extends API {
         return 'OK';
     }
 
-    private function _getRating($sku) {
+    private function _getRating($sku)
+    {
         $db = $this->_dbConnect();
-        if($db) {
+        if ($db) {
             $stmt = $db->prepare('select avg_rating, rating_count from ratings where sku = ?');
-            if($stmt->execute(array($sku))) {
+            if ($stmt->execute(array($sku))) {
                 $data = $stmt->fetch();
-                if($data) {
+                if ($data) {
                     // for some reason avg_rating is return as a string
                     $data['avg_rating'] = floatval($data['avg_rating']);
                     return $data;
@@ -92,11 +99,12 @@ class RatingsAPI extends API {
         }
     }
 
-    private function _updateRating($sku, $score, $count) {
+    private function _updateRating($sku, $score, $count)
+    {
         $db = $this->_dbConnect();
-        if($db) {
+        if ($db) {
             $stmt = $db->prepare('update ratings set avg_rating = ?, rating_count = ? where sku = ?');
-            if(! $stmt->execute(array($score, $count, $sku))) {
+            if (!$stmt->execute(array($score, $count, $sku))) {
                 $this->logger->error('failed to update rating');
                 throw new Exception('Failed to update data', 500);
             }
@@ -106,11 +114,12 @@ class RatingsAPI extends API {
         }
     }
 
-    private function _insertRating($sku, $score) {
+    private function _insertRating($sku, $score)
+    {
         $db = $this->_dbConnect();
-        if($db) {
+        if ($db) {
             $stmt = $db->prepare('insert into ratings(sku, avg_rating, rating_count) values(?, ?, ?)');
-            if(! $stmt->execute(array($sku, $score, 1))) {
+            if (!$stmt->execute(array($sku, $score, 1))) {
                 $this->logger->error('failed to insert data');
                 throw new Exception('Failed to insert data', 500);
             }
@@ -120,7 +129,8 @@ class RatingsAPI extends API {
         }
     }
 
-    private function _dbConnect() {
+    private function _dbConnect()
+    {
         $dsn = getenv('PDO_URL') ? getenv('PDO_URL') : 'mysql:host=mysql;dbname=ratings;charset=utf8mb4';
         $opt = array(
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -141,7 +151,8 @@ class RatingsAPI extends API {
     }
 
     // check sku exists in product catalogue
-    private function _checkSku($sku) {
+    private function _checkSku($sku)
+    {
         $url = getenv('CATALOGUE_URL') ? getenv('CATALOGUE_URL') : 'http://catalogue:8080/';
         $url = $url . 'product/' . $sku;
 
@@ -152,28 +163,28 @@ class RatingsAPI extends API {
         curl_setopt_array($curl, $opt);
 
         $data = curl_exec($curl);
-        if(! $data) {
-            $this->logger->error('failed to connect to catalogue');
-            throw new Exception('Failed to connect to catalogue', 500);
-        }
+        $this->logger->info("Response data $data");
         $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         $this->logger->info("catalogue status $status");
 
+        if (!$data || $status == 500) {
+            $this->logger->error('failed to connect to catalogue');
+            throw new Exception('Failed to connect to catalogue', 500);
+        }
+
         curl_close($curl);
-
         return $status == 200;
-
     }
 }
 
-if(!array_key_exists('HTTP_ORIGIN', $_SERVER)) {
+if (!array_key_exists('HTTP_ORIGIN', $_SERVER)) {
     $_SERVER['HTTP_ORIGIN'] = $_SERVER['SERVER_NAME'];
 }
 
 try {
     $API = new RatingsAPI($_REQUEST['request'], $_SERVER['HTTP_ORIGIN']);
     echo $API->processAPI();
-} catch(Exception $e) {
+} catch (Exception $e) {
     echo json_encode(Array('error' => $e->getMessage()));
 }
 ?>
