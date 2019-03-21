@@ -25,9 +25,9 @@ spec:
         resources:
           limits:
             cpu: 200m
-            memory: 400Mi
+            memory: 1000Mi
           requests:
             cpu: 100m
-            memory: 300Mi
+            memory: 800Mi
       restartPolicy: Always
 status: {}

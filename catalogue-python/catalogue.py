@@ -1,5 +1,6 @@
 import instana
 from flask import Flask
+from flask import Response
 from bson.json_util import dumps
 import logging
 import requests
@@ -43,7 +44,9 @@ def health_check():
 def products():
     products = dumps(collection.find())
     app.logger.info(products)
-    return products
+
+    resp = Response(products, status=200, mimetype='application/json')
+    return resp
 
 
 @app.route("/product/<sku>")
@@ -55,7 +58,8 @@ def product(sku):
     product["price"] *= 1 - discount['discount']
     app.logger.info(dumps(product))
 
-    return dumps(product)
+    resp = Response(dumps(product), status=200, mimetype='application/json')
+    return resp
 
 
 @app.route("/products/<category>")
@@ -63,21 +67,27 @@ def products_in(category):
     products = dumps(collection.find(
         {}, {"categories": category}).sort("name"))
     app.logger.info(products)
-    return products
+
+    resp = Response(products, status=200, mimetype='application/json')
+    return resp
 
 
 @app.route("/categories")
 def categories():
     categories = dumps(collection.find().distinct("categories"))
     app.logger.info(categories)
-    return categories
+
+    resp = Response(categories, status=200, mimetype='application/json')
+    return resp
 
 
 @app.route("/search/<text>")
 def search(text):
     hits = dumps(collection.find({"$text": {"$search": text}}))
     app.logger.info(hits)
-    return hits
+
+    resp = Response(hits, status=200, mimetype='application/json')
+    return resp
 
 
 def get_discount(sku):
