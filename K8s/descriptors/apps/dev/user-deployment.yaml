@@ -9,7 +9,7 @@ metadata:
     io.kompose.service: user
   name: user
 spec:
-  replicas: 1
+  replicas: 3
   strategy: {}
   template:
     metadata:
@@ -30,9 +30,9 @@ spec:
         resources:
           limits:
             cpu: 150m
-            memory: 400Mi
+            memory: 300Mi
           requests:
-            cpu: 100m
-            memory: 200Mi
+            cpu: 50m
+            memory: 100Mi
       restartPolicy: Always
 status: {}

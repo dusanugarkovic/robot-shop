@@ -25,10 +25,10 @@ spec:
         - containerPort: 15672
         resources:
           limits:
-            cpu: 200m
-            memory: 512Mi
+            cpu: 150m
+            memory: 500Mi
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 50m
+            memory: 200Mi
       restartPolicy: Always
 status: {}
