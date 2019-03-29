@@ -1,9 +1,19 @@
 version: '3'
 services:
-  mongodb:
+  mongodb-catalogue:
     build:
-      context: mongo
-    image: ${REPO}/rs-mongodb:${TAG}
+      context: mongo-catalogue
+    image: ${REPO}/rs-mongodb-catalogue:${TAG}
+    networks:
+      - robot-shop
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  mongodb-user:
+    build:
+      context: mongo-user
+    image: ${REPO}/rs-mongodb-user:${TAG}
     networks:
       - robot-shop
     deploy:
@@ -31,7 +41,8 @@ services:
       context: catalogue
     image: ${REPO}/rs-catalogue:${TAG}
     depends_on:
-      - mongodb
+      - mongodb-catalogue
+      - mongodb-user
     networks:
       - robot-shop
     deploy:
@@ -43,7 +54,8 @@ services:
       context: user
     image: ${REPO}/rs-user:${TAG}
     depends_on:
-      - mongodb
+      - mongodb-catalogue
+      - mongodb-user
       - redis
     networks:
       - robot-shop

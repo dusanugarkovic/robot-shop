@@ -252,7 +252,7 @@ redisClient.on('ready', (r) => {
 });
 
 function mongoConnect() {
-    mongoose.connect('mongodb://mongodb:27017/users', {
+    mongoose.connect('mongodb://mongodb-user:27017/users', {
         reconnectTries: 999,
         reconnectInterval: 5000,
         useNewUrlParser: true

@@ -25,7 +25,7 @@ dictConfig({
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb://mongodb:27017/", maxPoolSize=100)
+client = MongoClient("mongodb://mongodb-catalogue:27017/", maxPoolSize=100)
 db = client["catalogue"]
 collection = db["products"]
 
