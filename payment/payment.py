@@ -88,14 +88,14 @@ def pay(id):
         return 'cart not valid', 400
 
     # dummy call to payment gateway, hope they dont object
-    try:
-        req = requests.get(payment_gateway)
-        app.logger.info('{} returned {}'.format(payment_gateway, req.status_code))
-    except requests.exceptions.RequestException as err:
-        app.logger.error(err)
-        return str(err), 500
-    if req.status_code != 200:
-        return 'payment error', req.status_code
+    # try:
+    #    req = requests.get(payment_gateway)
+    #    app.logger.info('{} returned {}'.format(payment_gateway, req.status_code))
+    # except requests.exceptions.RequestException as err:
+    #    app.logger.error(err)
+    #    return str(err), 500
+    # if req.status_code != 200:
+    #    return 'payment error', req.status_code
 
     # Generate order id
     orderid = str(uuid.uuid4())
