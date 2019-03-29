@@ -74,7 +74,7 @@ def products_in(category):
 
 @app.route("/categories")
 def categories():
-    categories = dumps(collection.find().distinct("categories"))
+    categories = dumps(collection.distinct("categories"))
     app.logger.info(categories)
 
     resp = Response(categories, status=200, mimetype='application/json')
