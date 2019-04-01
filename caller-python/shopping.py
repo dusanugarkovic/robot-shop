@@ -19,7 +19,6 @@ def go_shopping(request_id):
 
     update_cart(uuid, products)
     update_cart(uuid, products)
-    update_cart(uuid, products)
 
     calls.get_cart(uuid)
 

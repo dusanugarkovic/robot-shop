@@ -3,6 +3,7 @@ import shopping
 import os
 from threading import Thread
 import logging
+import time
 
 load_concurrency = int(os.getenv('LOAD_CONCURRENCY', 6))
 
@@ -21,6 +22,7 @@ def threaded_process(number_of_threads):
         thread.start()
 
     [thread.join() for thread in threads]
+    time.sleep(2)
 
 
 def main():
