@@ -5,7 +5,7 @@ instana({
     }
 });
 
-const mongoose = require('mongoose');
+//const mongoose = require('mongoose');
 
 const redis = require('redis');
 const bodyParser = require('body-parser');
@@ -13,9 +13,9 @@ const express = require('express');
 const pino = require('pino');
 const expPino = require('express-pino-logger');
 
-var usersCollection;
-var ordersCollection;
-var mongoConnected = false;
+//var usersCollection;
+//var ordersCollection;
+//var mongoConnected = false;
 
 const logger = pino({
     level: 'info',
@@ -38,9 +38,10 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-if (!mongoConnected) {
+/*if (!mongoConnected) {
     mongoConnect();
 }
+*/
 
 app.get('/health', (req, res) => {
     var stat = {
@@ -68,7 +69,7 @@ app.get('/uniqueid', (req, res) => {
 
 // check user exists
 app.get('/check/:id', (req, res) => {
-    if (mongoConnected) {
+    /*if (mongoConnected) {
         usersCollection.findOne({name: req.params.id}).then((user) => {
             if (user) {
                 res.send('OK');
@@ -83,11 +84,13 @@ app.get('/check/:id', (req, res) => {
         req.log.error('database not available');
         res.status(500).send('database not available');
     }
+    */
+	res.send('OK');
 });
 
 // return all users for debugging only
 app.get('/users', (req, res) => {
-    if (mongoConnected) {
+    /*if (mongoConnected) {
         usersCollection.find().toArray().then((users) => {
             res.json(users);
         }).catch((e) => {
@@ -97,11 +100,13 @@ app.get('/users', (req, res) => {
     } else {
         req.log.error('database not available');
         res.status(500).send('database not available');
-    }
+    }*/
+	res.send('OK');
 });
 
 app.post('/login', (req, res) => {
     req.log.info('login', req.body);
+    /*
     if (req.body.name === undefined || req.body.password === undefined) {
         req.log.warn('credentails not complete');
         res.status(400).send('name or passowrd not supplied');
@@ -126,11 +131,13 @@ app.post('/login', (req, res) => {
     } else {
         req.log.error('database not available');
         res.status(500).send('database not available');
-    }
+    }*/
+    res.send('OK');
 });
 
 // TODO - validate email address format
 app.post('/register', (req, res) => {
+	/*
     req.log.info('register', req.body);
     if (req.body.name === undefined || req.body.password === undefined || req.body.email === undefined) {
         req.log.warn('insufficient data');
@@ -163,9 +170,12 @@ app.post('/register', (req, res) => {
         req.log.error('database not available');
         res.status(500).send('database not available');
     }
+    */
+	res.send('OK');
 });
 
 app.post('/order/:id', (req, res) => {
+	/*
     req.log.info('order', req.body);
     // only for registered users
     if (mongoConnected) {
@@ -217,9 +227,12 @@ app.post('/order/:id', (req, res) => {
         req.log.error('database not available');
         res.status(500).send('database not available');
     }
+    */
+	res.send('OK');
 });
 
 app.get('/history/:id', (req, res) => {
+	/*
     if (mongoConnected) {
         ordersCollection.findOne({
             name: req.params.id
@@ -236,7 +249,8 @@ app.get('/history/:id', (req, res) => {
     } else {
         req.log.error('database not available');
         res.status(500).send('database not available');
-    }
+    }*/
+	res.send('OK');
 });
 
 // connect to Redis
@@ -251,6 +265,7 @@ redisClient.on('ready', (r) => {
     console.info('Redis READY', r);
 });
 
+/*
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb-user:27017/users', {
         reconnectTries: 999,
@@ -266,6 +281,7 @@ function mongoConnect() {
         mongoConnect();
     });
 }
+*/
 
 // fire it up!
 const port = process.env.USER_SERVER_PORT || '8080';
