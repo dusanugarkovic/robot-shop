@@ -1,0 +1,218 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: instana-agent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: instana-agent
+  namespace: instana-agent
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: instana-agent-secret
+  namespace: instana-agent
+type: Opaque
+data:
+  key: YUVSbTlnMThTRUNBMnphY3BGSDFOQQo=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: instana-configuration
+  namespace: instana-agent
+data:
+  configuration.yaml: |
+    com.instana.tracing:
+       extra-http-headers:
+         - 'User-Agent'
+         - 'Accept'
+         - 'X-Instana-Service'
+    com.instana.plugin.netcore:
+      sensor:
+        enabled: true
+      tracing:
+        enabled: true
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: instana-agent
+  namespace: instana-agent
+spec:
+  template:
+    metadata:
+      labels:
+        app: instana-agent
+    spec:
+      serviceAccount: instana-agent
+      hostIPC: true
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: instana-agent
+          image: instana/agent
+          imagePullPolicy: Always
+          env:
+            - name: INSTANA_AGENT_LEADER_ELECTOR_PORT
+              value: "42655"
+            - name: INSTANA_ZONE
+              value: k8s-demo
+            - name: INSTANA_AGENT_ENDPOINT
+              value: saas-eu-west-1.instana.io
+            - name: INSTANA_AGENT_ENDPOINT_PORT
+              value: "443"
+            - name: INSTANA_AGENT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: instana-agent-secret
+                  key: key
+            - name: INSTANA_AGENT_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dev
+              mountPath: /dev
+            - name: run
+              mountPath: /var/run
+            - name: sys
+              mountPath: /sys
+            - name: log
+              mountPath: /var/log
+            - name: machine-id
+              mountPath: /etc/machine-id
+            - name: configuration
+              subPath: configuration.yaml
+              mountPath: /root/configuration.yaml
+          livenessProbe:
+            exec:
+              command:
+                - echo
+                - noop
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - echo
+                - noop
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "0.5"
+            limits:
+              memory: "512Mi"
+              cpu: "1.5"
+        - name: instana-agent-leader-elector
+          image: gcr.io/google-containers/leader-elector:0.5
+          env:
+            - name: INSTANA_AGENT_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          args: ["--election=instana", "--http=0.0.0.0:42655", "--id=$(INSTANA_AGENT_POD_NAME)"]
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 42655
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 42655
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: run
+          hostPath:
+            path: /var/run
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: log
+          hostPath:
+            path: /var/log
+        - name: machine-id
+          hostPath:
+            path: /etc/machine-id
+        - name: configuration
+          configMap:
+            name: instana-configuration
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: instana-agent-role
+rules:
+- nonResourceURLs:
+    - "/version"
+    - "/healthz"
+  verbs: ["get"]
+- apiGroups: ["batch"]
+  resources:
+    - "jobs"
+  verbs: ["get", "list"]
+- apiGroups: ["extensions", "watch"]
+  resources:
+    - "deployments"
+    - "replicasets"
+    - "ingresses"
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources:
+    - "deployments"
+    - "replicasets"
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+    - "namespaces"
+    - "events"
+    - "services"
+    - "endpoints"
+    - "nodes"
+    - "pods"
+    - "replicationcontrollers"
+    - "componentstatuses"
+    - "resourcequotas"
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+    - "endpoints"
+  verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: instana-agent-role-binding
+  namespace: instana-agent
+subjects:
+- kind: ServiceAccount
+  name: instana-agent
+  namespace: instana-agent
+roleRef:
+  kind: ClusterRole
+  name: instana-agent-role
+  apiGroup: rbac.authorization.k8s.io
