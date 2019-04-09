@@ -121,10 +121,6 @@ function getDiscount(sku) {
 
 function mongoConnect() {
     mongoose.connect('mongodb://mongodb:27017/catalogue', {
-        poolSize: 20,
-        socketTimeoutMS: 15000,
-        reconnectTries: 5,
-        reconnectInterval: 3000,
         useNewUrlParser: true
     }).then(() => {
         logger.info('Connecting to database successful.');
