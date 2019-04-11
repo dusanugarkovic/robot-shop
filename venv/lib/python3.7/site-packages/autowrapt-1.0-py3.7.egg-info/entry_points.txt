@@ -1,3 +1,0 @@
-[autowrapt.examples]
-this = autowrapt.examples:autowrapt_this
-
