@@ -6,7 +6,9 @@ metadata:
   name: caller
 spec:
   replicas: 1
-  strategy: {}
+  selector:
+    matchLabels:
+      app: caller
   template:
     metadata:
       labels:

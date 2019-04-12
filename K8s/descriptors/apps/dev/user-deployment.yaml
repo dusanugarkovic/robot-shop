@@ -6,9 +6,11 @@ metadata:
   name: user
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: user
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: user
     spec:

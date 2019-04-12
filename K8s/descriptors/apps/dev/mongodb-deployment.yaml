@@ -6,6 +6,9 @@ metadata:
   name: mongodb
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
   template:
     metadata:
       labels:

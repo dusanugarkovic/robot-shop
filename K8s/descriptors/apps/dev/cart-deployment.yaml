@@ -6,6 +6,9 @@ metadata:
   name: cart
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: cart
   template:
     metadata:
       labels:
