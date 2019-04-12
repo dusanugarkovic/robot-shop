@@ -20,6 +20,10 @@ services:
     build:
       context: eum-2.0/eum-robotshop-server
     image: ${REPO}/eum/eum-robotshop-server:${TAG}
+  caller:
+    build:
+      context: caller-python
+    image: ${REPO}/caller:${TAG}
   discount:
     build:
       context: discount
