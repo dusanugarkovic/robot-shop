@@ -35,14 +35,6 @@ data:
         enabled: true
       tracing:
         enabled: true
-  com.instana.agent.main.config.UpdateManager.cfg: |
-    # Instana Update Manager configuration.
-    # AUTO for automatic updates with given schedule. OFF for no automatic updates.
-    mode = AUTO
-    # DAY for daily, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-    every = DAY
-    # Time is hh:mm in 24 hours format.
-    at = 04:10
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -96,10 +88,7 @@ spec:
               mountPath: /etc/machine-id
             - name: configuration
               subPath: configuration.yaml
-              mountPath: /root/configuration.yaml
-            - name: configuration
-              subPath: com.instana.agent.main.config.UpdateManager.cfg
-              mountPath: /opt/instana/agent/etc/instana/com.instana.agent.main.config.UpdateManager.cfg 
+              mountPath: /root/configuration.yaml 
           livenessProbe:
             exec:
               command:
