@@ -1,24 +1,18 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose -f ../docker-compose.yaml convert
-    kompose.version: 1.10.0 (8bb0907)
-  creationTimestamp: null
   labels:
-    io.kompose.service: cart
+    app: cart
   name: cart
 spec:
   replicas: 1
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        io.kompose.service: cart
+        app: cart
     spec:
       containers:
-      - image: gcr.io/k8s-brewery/robot-shop/rs-cart:latest
+      - image: gcr.io/k8s-brewery/demo/cart:latest
         name: cart
         env:
           - name: INSTANA_AGENT_HOST
@@ -35,4 +29,3 @@ spec:
             cpu: 50m
             memory: 100Mi
       restartPolicy: Always
-status: {}

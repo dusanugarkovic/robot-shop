@@ -1,24 +1,18 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose -f ../docker-compose.yaml convert
-    kompose.version: 1.10.0 (8bb0907)
-  creationTimestamp: null
   labels:
-    io.kompose.service: mongodb
+    app: mongodb
   name: mongodb
 spec:
   replicas: 1
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        io.kompose.service: mongodb
+        app: mongodb
     spec:
       containers:
-      - image: gcr.io/k8s-brewery/robot-shop/rs-mongodb:latest
+      - image: gcr.io/k8s-brewery/demo/mongodb:latest
         name: mongodb
         ports:
         - containerPort: 27017
@@ -30,4 +24,3 @@ spec:
             cpu: 50m
             memory: 200Mi
       restartPolicy: Always
-status: {}

@@ -1,24 +1,18 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose -f ../docker-compose.yaml convert
-    kompose.version: 1.10.0 (8bb0907)
-  creationTimestamp: null
   labels:
-    io.kompose.service: web
+    app: web
   name: web
 spec:
   replicas: 1
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        io.kompose.service: web
+        app: web
     spec:
       containers:
-      - image: gcr.io/k8s-brewery/robot-shop/rs-web:latest
+      - image: gcr.io/k8s-brewery/demo/web:latest
         name: web
         ports:
         - containerPort: 8080
@@ -30,4 +24,3 @@ spec:
             cpu: 50m
             memory: 50Mi
       restartPolicy: Always
-status: {}

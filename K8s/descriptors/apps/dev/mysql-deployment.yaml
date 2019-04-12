@@ -1,24 +1,18 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose -f ../docker-compose.yaml convert
-    kompose.version: 1.10.0 (8bb0907)
-  creationTimestamp: null
   labels:
-    io.kompose.service: mysql
+    app: mysql
   name: mysql
 spec:
   replicas: 1
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        io.kompose.service: mysql
+        app: mysql
     spec:
       containers:
-      - image: gcr.io/k8s-brewery/robot-shop/rs-mysql-db:latest
+      - image: gcr.io/k8s-brewery/demo/mysql-db:latest
         name: mysql
         securityContext:
           capabilities:
@@ -33,4 +27,3 @@ spec:
             cpu: 300m
             memory: 1000Mi
       restartPolicy: Always
-status: {}

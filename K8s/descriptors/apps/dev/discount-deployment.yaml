@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: discount
-          image: gcr.io/k8s-brewery/robot-shop/rs-discount:latest
+          image: gcr.io/k8s-brewery/demo/discount:latest
           ports:
             - containerPort: 8080
           resources:
@@ -24,7 +24,6 @@ spec:
               cpu: 600m
               memory: 800Mi
             requests:
-              cpu: 400m
+              cpu: 300m
               memory: 400Mi
       restartPolicy: Always
-status: {}
